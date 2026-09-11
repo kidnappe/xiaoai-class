@@ -1,0 +1,36 @@
+name: 部署到 Cloudflare Pages
+
+# 推送到 main 即自动部署。用 Pages 的 Direct Upload + Wrangler CLI 实现，
+# 原因：wrangler CLI 无法创建 Git 集成型项目，而 Git 集成项目一旦建立就不能再改回
+# Direct Upload，所以这里选可完全脚本化的这一条路。
+# CI 里 checkout 出来的内容严格等于仓库 commit（.gitignore 已挡住内部档案），
+# 因此 `pages deploy .` 在 CI 中是安全的，不会把 交接文档.md / reference/ 传上去。
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # 锁死 wrangler 版本：不锁会让上游版本漂移随时可能打断部署
+      - name: 部署
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx --yes wrangler@4.131.1 pages deploy . --project-name xiaoai-kebiao-zx --branch main --commit-dirty=true
