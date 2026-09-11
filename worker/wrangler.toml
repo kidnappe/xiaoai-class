@@ -1,0 +1,16 @@
+name = "xiaoai-kebiao-api"
+main = "worker.js"
+compatibility_date = "2026-09-01"
+
+# 会话存于 isolate 内存，Worker 冷/换 isolate 后需在前端重新点「连接」。
+# 若要跨请求保持登录，可加 Redis 或 KV（本项目暂未实现）。
+
+# 可选：访问计数持久化（不配也能跑，退化为 isolate 内存计数）
+# [[kv_namespaces]]
+# binding = "COUNTER_KV"
+# id = "<在 Cloudflare 后台创建的 namespace id>"
+
+# 可选：AI 兜底解析。开启后取消注释并 `wrangler secret put AI_API_KEY`
+# [vars]
+# AI_BASE_URL = "https://api.openai.com/v1"
+# AI_MODEL = "gpt-4o-mini"

@@ -1,0 +1,27 @@
+# ---- 内部档案：不随仓库分发 ----
+# 跨会话交接记录：含学校标识、开发机绝对路径、逐日调试时间线与用户反馈原文
+交接文档.md
+
+# 上游项目源码与第三方调研资料：各自有上游仓库与许可，不由本仓库重新分发
+# （README 第九节致谢已给出对应 GitHub 链接）
+reference/
+
+# 跨会话技术线索与调研笔记（含未公开接口情报，不宜公开分发）
+.context/
+
+# 会话临时产物
+.scratch/
+.t.js
+*.zip
+
+# ---- 运行期与本机环境 ----
+node_modules/
+__pycache__/
+*.pyc
+credentials.json
+.wrangler/
+.dev.vars
+.env
+Thumbs.db
+Desktop.ini
+.DS_Store
