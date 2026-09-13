@@ -26,7 +26,7 @@
 - ✅ **一键批量导入**：写入小爱指定课表，支持导入前清空、同步节数与时间表
 - ✅ **课表管理**：查看、单条删除、全部清空、导出 JSON 备份
 - ✅ **多种提取通道**：浏览器书签（推荐，零安装且自动最新）、**教务导出表格直接上传（.xls/.xlsx，零安装不碰接口）**、油猴脚本（按钮常驻）、智能粘贴（兜底），总有一种适合你
-- ✅ **纯前端可控、隐私友好**：教务 Cookie 不出浏览器，小爱凭据只存本机内存
+- ✅ **数据不出本机**：教务 Cookie 不进入任何第三方；小爱凭据只存在**你自己浏览器**的本地存储里（下次自动回填，免重复粘贴），除小米课表服务器外不发往任何地方
 
 ### 适用学校
 
@@ -196,7 +196,9 @@ A：勾选「同步课表设置」重新导入；或在预览下方的「课表�
 A：只要是乘方教务就能试。若提取到的星期/节次/时间有偏差，把报错提示（会显示它读到的字段名和学期码）反馈出来即可快速适配。
 
 **Q：隐私安全吗？**
-A：教务登录凭证（Cookie）全程只在你浏览器里，提取脚本直接访问学校教务接口，不经过任何第三方；小爱凭据只存本机内存用于代理请求，服务器不落盘。
+A：教务登录凭证（Cookie）全程只在你浏览器里，提取脚本与表格解析都在你本机完成，不经过任何第三方；小爱凭据（appId / serviceToken / deviceId）存在**你本机浏览器的 localStorage**，以便下次自动回填——它只会被发往小米的课表服务器，我们的后端不存副本（服务端只在内存里保留会话，不落盘）。
+
+> ⚠ 请知道：凭据**不会**因为关闭网页而消失。在机房、图书馆等公用电脑上使用时，用完请清除该站点的浏览器数据（目前页面内还没有「退出并清除凭据」按钮）。
 
 ---
 
@@ -221,17 +223,36 @@ node scripts/build_functions.mjs
 
 它会：① 把最新脚本内联进 Cloudflare 后端；② 生成独立油猴脚本 `tools/cf_kebiao_extractor.user.js`。
 
-### 部署到 Cloudflare Pages（可选）
+### 部署到 Cloudflare Pages（本项目线上环境）
 
-推到 GitHub → Cloudflare Pages 连仓库 → Framework **None**、Output **`/`** → 部署后 `functions/` 自动接管 `/api/*`。
+**线上地址：<https://xiaoai-kebiao-zx.pages.dev>** —— 打开即用，不需要装 Node、不需要下载任何东西。
+
+部署方式是 **Direct Upload + GitHub Actions**：推送到 `main` 分支时，`.github/workflows/deploy.yml` 在 CI 里跑 `wrangler pages deploy`，把仓库内容（含 `functions/` 后端）上传到 Pages，约 30 秒生效。
+
+> 为什么不用 Pages 的「Git 集成」：`wrangler` CLI 建不了 Git 集成型项目，而官方明确 Git 集成项目之后**不能再改回 Direct Upload**，所以选了这条完全可脚本化、也不依赖控制台入口的路。
+
+手工部署（与 CI 等价）：
+
+```bash
+npx wrangler login
+npx wrangler pages project create <项目名> --production-branch main
+npx wrangler pages deploy . --project-name <项目名>   # 在本仓库根目录执行
+```
+
+走 CI 需在 GitHub 仓库 Settings → Secrets and variables → Actions 里配两个 **Secret**：`CLOUDFLARE_API_TOKEN`（权限只需 Account / Cloudflare Pages / Edit）和 `CLOUDFLARE_ACCOUNT_ID`。两者都建议放 Secret 而非 Variable——公开仓库的 Actions Variables 是明文可读的。
+
 可选环境变量：`AI_API_KEY`（启用服务端 AI 兜底解析）、`AI_BASE_URL`/`AI_MODEL`、KV 绑定 `COUNTER_KV`（持久化访问计数）。
 
-### GitHub Pages 前端 + Cloudflare Worker 后端（可选）
+### ⚠️ 不要拿 Cloudflare Worker 做对外分享的后端（国内访问不了）
 
-Pages 上没有 `/api` 后端时，把后端单独部署为 Worker，前端用 `?api=` 指过去：
+`worker/` 目录保留了把同一套后端部署成 Worker 的能力，但**实测 `*.workers.dev` 在中国大陆被 DNS 污染、无法访问**（解析结果指向与本服务无关的地址），而 Pages 用的 `*.pages.dev` 可正常访问。
 
-1. 部署后端：`npx wrangler deploy -c worker/wrangler.toml`，记下返回的 `https://xxx.workers.dev`；
-2. 前端推到 GitHub Pages，访问时带参数 `?api=https://xxx.workers.dev`（会记住到 localStorage）；或把该地址预置进构建；
+所以「GitHub Pages 放前端 + Worker 放后端」这套组合，在国内会得到一个**页面能打开、但所有 `/api` 请求全部失败**的部署，典型表现就是「点连接没反应」。除非你已经给 Worker 绑了自己的域名，否则请直接使用上面的 Cloudflare Pages 单站方案。
+
+仅当你确有自定义域名时，才按下面步骤用 Worker：
+
+1. `npx wrangler deploy -c worker/wrangler.toml`，然后**在 Worker 设置里绑定你自己的域名**（不要拿 `*.workers.dev` 对外分享）；
+2. 前端访问时带参数 `?api=https://你的域名`（会记住到 localStorage）；或把该地址预置进构建；
 3. 页面顶部出现「🔗 后端 API」横幅即生效，点「改用同源」可切回。
 
 ### 测试

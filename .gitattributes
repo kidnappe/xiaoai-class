@@ -1,0 +1,20 @@
+# 统一换行符：仓库与检出都用 LF，避免本机 core.autocrlf=true 在检出时改写文件字节。
+# 不这么做的话，每次 commit 都会对多个文件报 “LF will be replaced by CRLF”，
+# 而且 build_functions.mjs 读的是检出后的工作副本，会让构建产物的 diff 全是换行噪音。
+* text=auto eol=lf
+
+# Windows 批处理必须保持 CRLF，否则 cmd 解析会出问题（本项目踩过的坑，勿改）
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# 第三方库与压缩包：禁止任何换行转换（体积大、改动无意义、还可能破坏内联数据）
+vendor/** -text
+*.min.js -text
+*.zip binary
+
+# 图片类二进制
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
