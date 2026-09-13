@@ -94,7 +94,7 @@ code{background:var(--bg);border:1px solid var(--line);border-radius:4px;padding
 <div class="wrap">
 <header>
   <h1>小爱课表导入器 · 乘方教务版</h1>
-  <span class="tag">油猴一键提取 → 粘贴 → 导入小爱 · 适配乘方科技教务系统 · <b id="feVersion" title="前端版本">v1.4.1</b></span>
+  <span class="tag">油猴一键提取 → 粘贴 → 导入小爱 · 适配乘方科技教务系统 · <b id="feVersion" title="前端版本">v1.4.2</b></span>
   <div id="visitCounter" style="font-size:12px;color:var(--sub);margin-top:6px"></div>
 </header>
 
@@ -186,6 +186,17 @@ code{background:var(--bg);border:1px solid var(--line);border-radius:4px;padding
 
   <div class="msg" id="jiaowuMsg"></div>
 
+  <!-- 方案三：教务导出的课表表格上传（.xls / .xlsx）-->
+  <details style="margin-top:14px;border:1px solid var(--line);border-radius:10px;padding:12px 16px">
+    <summary style="font-size:13px;font-weight:600;color:var(--sub);cursor:pointer">📎 上传教务导出的课表表格（.xls / .xlsx）</summary>
+    <p class="hint" style="margin:10px 0 8px">你的教务系统如果能「导出课表为 Excel」（教务里通常在个人课表页顶部或右键菜单），可以直接选文件解析，<strong>不需要装扩展、不需要点书签</strong>，一次拿到整学期。表格结构不依赖任何接口字段，因此也不会出现星期偏移、节次认错这类问题。</p>
+    <div class="btns" style="margin:0">
+      <input type="file" id="xlsFile" accept=".xls,.xlsx,.csv" style="display:none">
+      <button class="primary" id="btnXlsPick">📎 选择教务导出的表格文件</button>
+    </div>
+    <p class="hint" style="margin:10px 0 0;color:var(--err)"><strong>⚠ 一个已知限制：</strong>教务导出的表格里只有「第一大节 / 第二大节」这种<strong>节次号</strong>，<strong>没有每节课的上下课时刻</strong>（那个只能从接口里的 <code>qssj/jssj</code> 或官方作息表拿）。所以解析后请务必在下方「课表设置」里点 <strong>☀ 夏令时 / ❄ 冬令时</strong>（识别到河南师大时会自动选中），或手填时间表，否则导入小爱后时间会不准。</p>
+    <div class="msg" id="xlsMsg"></div>
+  </details>
   <div style="margin-top:14px;padding:12px 14px;background:var(--bg);border-radius:8px;border:1px solid var(--line)">
     <div style="font-size:13px;font-weight:600;color:var(--sub);margin-bottom:8px">📘 完整流程（书签版，5 步）</div>
     <ol style="line-height:2.2;font-size:13px;padding-left:20px;margin:0">
@@ -198,7 +209,7 @@ code{background:var(--bg);border:1px solid var(--line);border-radius:4px;padding
     <p class="hint" style="margin:8px 0 0;line-height:1.6">学期从页面的学期下拉框读取，提取浮窗会写明「学期 X，来源 Y」便于核对；识别不到时（提取报错带学期码）可右键教务页面的「📚 提取课表」按钮 → 手动钉死学期代码（如 <code>202601</code> 代表 2026 秋季学期）。长期用更省事可改用下方「🥈 油猴脚本」，一次安装后按钮常驻。</p>
   </div>
 
-  <!-- 方案三：智能提取（兜底，折叠）-->
+  <!-- 方案四：智能提取（兜底，折叠）-->
   <details style="margin-top:14px;border:1px dashed var(--line);border-radius:10px;padding:12px 16px">
     <summary style="font-size:13px;font-weight:600;color:var(--sub);cursor:pointer">🤖 智能提取（油猴/书签都用不了时的兜底）</summary>
     <p class="hint" style="margin:10px 0 8px">支持三种粘贴内容，点「智能提取」自动识别：<br>
@@ -213,6 +224,7 @@ code{background:var(--bg);border:1px solid var(--line);border-radius:4px;padding
     </div>
     <div class="msg" id="aiMsg"></div>
   </details>
+
 </div>
 
 <div class="card hidden" id="cardTable">
@@ -276,6 +288,7 @@ code{background:var(--bg);border:1px solid var(--line);border-radius:4px;padding
 <footer>接口协议适配小爱课程表 Web 端 · 教务适配乘方科技系统 · 数据只经过你的电脑和小爱服务器</footer>
 </div>
 
+<script src="vendor/xlsx.full.min.js"></script>
 <script>
 "use strict";
 const $ = id => document.getElementById(id);
@@ -1427,6 +1440,8 @@ function mergeWeekCourses(list){
 }
 function compressWeekNums(weeks, suffix){
   if(!weeks.length) return "";
+  // 单周必须走这一支：否则下面的 contiguous 判定（长度 1 时 vacuously true）会输出 “2-2周” 这种坏数据
+  if(weeks.length === 1) return weeks[0] + "周" + (suffix ? "("+suffix+")" : "");
   var contiguous = weeks.every(function(w,i){ return i===0 || w === weeks[i-1]+1; });
   var step2 = weeks.length >= 3 && weeks.every(function(w,i){ return i===0 || w === weeks[i-1]+2; });
   var base;
@@ -1484,6 +1499,132 @@ $("btnClearInput").onclick = function(){
   ta.value = "";
   ta.focus();
 };
+
+// ---- 教务导出的课表表格（.xls / .xlsx）→ 标准课程 ----
+// 纯函数：输入一个 sheet 的二维数组（单元格均按字符串读），输出解析结果。
+// 已实测结构（河南师大 / 乘方系导出）：同一张表里纵向重复分块，每块 =
+//   标题行（含学期，如 2026-2027-1）→ 周次行（第N周，合并单元格）→ 日期行 →
+//   星期行（一…日）→ 第一大节…第七大节；
+//   格子内用 \r\n 分隔四段：课程名[性质] / 教师 / 周次-起止节（如 1-0102）/ 教室；
+//   一个格子可能放多门课，用空行分隔。
+// 周次合并直接复用已有的 mergeWeekCourses，不再写第三份。
+function parseTimetableGrid(grid){
+  var CN = {'一':1,'二':2,'三':3,'四':4,'五':5,'六':6,'日':7,'天':7};
+  var colWeek = {}, colDay = {}, sectionRows = [], semester = "";
+
+  (grid || []).forEach(function(row, r){
+    var cells = row.map(function(v){ return String(v==null?"":v).trim(); });
+    var c0 = cells[0] || "";
+    if(!semester){ var sm = c0.match(/(\d{4})\s*-\s*\d{4}\s*-\s*([12])/); if(sm) semester = sm[0]; }
+
+    // 周次行：合并单元格只在该周首列有值，因此向右顺推填同周
+    if(cells.some(function(v){ return /^第\d+周$/.test(v); })){
+      var cur = 0;
+      cells.forEach(function(v, c){
+        var wm = v.match(/^第(\d+)周$/);
+        if(wm) cur = parseInt(wm[1], 10);
+        else if(c > 0 && cur) colWeek[c] = cur;
+      });
+      return;
+    }
+
+    // 星期行：一行里有≥5 个「一/二/…/日」
+    var dayCnt = cells.filter(function(v){ return !!CN[v]; }).length;
+    if(dayCnt >= 5){
+      cells.forEach(function(v, c){ var d = CN[v]; if(d && c > 0) colDay[c] = d; });
+      return;
+    }
+
+    // 节次行：首列是「第X大节 / 第X节」
+    if(/^第[一二三四五六七八九十]{1,3}(大节|节)$/.test(c0)) sectionRows.push(r);
+  });
+
+  var entries = [], skipped = [];
+  sectionRows.forEach(function(r){
+    var row = grid[r] || [];
+    for(var c = 1; c < row.length; c++){
+      var cell = String(row[c]==null?"":row[c]).replace(/\r\n/g, "\n").trim();
+      if(!cell) continue;
+      var wk = colWeek[c] || 0;
+      var day = colDay[c] || (((c - 1) % 7) + 1);
+
+      cell.split(/\n{2,}/).forEach(function(blk){
+        var lines = blk.split("\n").map(function(x){ return String(x).trim(); }).filter(Boolean);
+        if(lines.length < 2) return;
+
+        // 找「周次-节次」码行：优先 1-0102（周1、第1-2节），兼容 1-3（单节）
+        var codeIdx = -1, cWeek = 0, s0 = 0, s1 = 0;
+        lines.forEach(function(ln, i){
+          if(codeIdx >= 0) return;
+          var m4 = ln.match(/^(\d{1,2})-(\d{2})(\d{2})$/);
+          if(m4){ codeIdx = i; cWeek = +m4[1]; s0 = +m4[2]; s1 = +m4[3]; return; }
+          var m2 = ln.match(/^(\d{1,2})-(\d{1,2})$/);
+          if(m2 && +m2[2] > 0 && +m2[2] <= 30){ codeIdx = i; cWeek = +m2[1]; s0 = s1 = +m2[2]; }
+        });
+        if(codeIdx < 0){ skipped.push(lines[0] || "(无节次码)"); return; }
+
+        var rest = lines.filter(function(_, i){ return i !== codeIdx; });
+        var name = (rest[0] || "").replace(/[\(（\[]\s*[\u4e00-\u9fa5]{2,4}\s*[\)）\]]\s*$/, "").trim();
+        var teacher = rest[1] || "";
+        var room = rest.slice(2).join(" ").trim();
+        var useWeek = cWeek || wk;
+        if(!name || !s0 || s1 < s0 || !useWeek || day < 1 || day > 7){ skipped.push(name || "(无名课程)"); return; }
+
+        var secs = [];
+        for(var i = s0; i <= s1; i++) secs.push(i);
+        entries.push({ name: name, teacher: teacher, position: room, day: day,
+                       sections: secs.join(","), weeks: useWeek + "周" });
+      });
+    }
+  });
+
+  var courses = entries.length ? mergeWeekCourses(entries) : [];
+  var maxSec = 0;
+  courses.forEach(function(c){
+    String(c.sections || "").split(",").forEach(function(n){ var v = parseInt(n, 10); if(v > maxSec) maxSec = v; });
+  });
+  return { courses: courses, entries: entries.length, skipped: skipped, semester: semester,
+           maxSection: maxSec, weekCols: Object.keys(colWeek).length, dayCols: Object.keys(colDay).length };
+}
+
+// 选文件 → 解析 → 灌进现有的 JSON 框 → 走现有「解析预览」整条链路（验证/预览/冲突高亮全部复用）
+function xlsHandleFile(file){
+  var m = $("xlsMsg");
+  function say(t, ok){ if(m){ m.className = "msg " + (ok ? "ok" : "err"); m.textContent = t; } }
+  if(!file) return;
+  if(typeof XLSX === "undefined"){
+    say("解析库未加载（vendor/xlsx.full.min.js 没拉到）。本地用请确认用 启动导入器.bat 打开页面；线上用请刷新重试。", false);
+    return;
+  }
+  var reader = new FileReader();
+  reader.onload = function(){
+    try{
+      var wb = XLSX.read(new Uint8Array(reader.result), { type: "array" });
+      var best = null, bestName = "";
+      wb.SheetNames.forEach(function(name){
+        var g = XLSX.utils.sheet_to_json(wb.Sheets[name], { header: 1, raw: false, defval: "" });
+        var r = parseTimetableGrid(g);
+        if(r.entries && (!best || r.entries > best.entries)){ best = r; bestName = name; }
+      });
+      if(!best || !best.courses.length){
+        say("没能从这份表格里认出课表。它需要是「星期 × 节次」网格布局（列头含第N周/星期，行首含第一大节…）。如果是课程清单/列表式导出，请改用上面的提取脚本。", false);
+        return;
+      }
+      var schedule = buildSchedule(best.courses, best.maxSection, null);
+      $("jsonInput").value = JSON.stringify({ courses: best.courses, schedule: schedule, source: "xls:" + bestName }, null, 2);
+      var tail = best.skipped.length ? "；已跳过 " + best.skipped.length + " 条无法定位的格子" : "";
+      say("✅ 解析出 " + best.courses.length + " 门课（" + best.entries + " 条单元格记录，学期 " + (best.semester || "未知") + "，最多到第 " + best.maxSection + " 节" + tail + "）。正在生成预览——请务必核对星期/节次/周次，并在课表设置里套用学校作息（表格不含上下课时刻）。", true);
+      $("btnParse").click();
+    }catch(e){
+      say("解析失败：" + (e && e.message || e), false);
+    }
+  };
+  reader.onerror = function(){ say("文件读取失败，请确认文件未被 Excel 占用后重试。", false); };
+  reader.readAsArrayBuffer(file);
+}
+
+$("btnXlsPick").onclick = function(){ $("xlsFile").click(); };
+$("xlsFile").onchange = function(){ xlsHandleFile(this.files && this.files[0]); };
 
 (async function init(){
   // 跨后端模式提示（前端与 /api 分开部署时，后端地址来自 ?api= 或 localStorage）

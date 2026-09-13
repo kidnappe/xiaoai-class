@@ -66,7 +66,7 @@ const inline = html.match(/<script>([\s\S]*?)<\/script>\s*<\/body>/)[1];
 const sandbox = {};
 const fn = new Function('window', 'document', 'location', 'navigator', 'localStorage', 'fetch', 'setInterval', 'NodeFilter',
   inline + `
-  return { parseJcdm, cfRowsToCourses, normalizeWeeks, compressWeekNums, mergeWeekCourses, localParseSchedule, buildSchedule, jiaowuUrl, makeBookmarklet, isHtuHost, expandWeekInput, findConflicts, detectSeason };`);
+  return { parseJcdm, cfRowsToCourses, normalizeWeeks, compressWeekNums, mergeWeekCourses, localParseSchedule, buildSchedule, jiaowuUrl, makeBookmarklet, isHtuHost, expandWeekInput, findConflicts, detectSeason, parseTimetableGrid };`);
 const api = fn(global.window, global.document, global.location, global.navigator, global.localStorage, global.fetch, () => 0, global.NodeFilter);
 
 // 1. 节次代码解析（乘方教务三种格式）
@@ -213,6 +213,43 @@ check('jiaowuUrl 登录页', api.jiaowuUrl('login') === 'https://jxgl.myschool.e
   check('detectSeason 识别夏季', api.detectSeason(toSecs(summer)) === 'summer', api.detectSeason(toSecs(summer)));
   check('detectSeason 识别冬季', api.detectSeason(toSecs(winter)) === 'winter', api.detectSeason(toSecs(winter)));
   check('detectSeason 不匹配返回空', api.detectSeason([{i:1,s:'07:00',e:'07:45'}]) === '');
+}
+
+// 12. 教务导出的 .xls 网格 → 标准课程（合成网格，不含真实个人信息）
+{
+  const W = 15, blank = n => new Array(n).fill("");
+  const G = [];
+  G.push(["周明2026-2027-1课表", ...blank(W - 1)]);
+  G.push(["周次\n日期", "第1周", ...blank(6), "第2周", ...blank(6)]);
+  G.push(["", "09-07","09-08","09-09","09-10","09-11","09-12","09-13","09-14","09-15","09-16","09-17","09-18","09-19","09-20"]);
+  G.push(["星期", "一","二","三","四","五","六","日","一","二","三","四","五","六","日"]);
+  const s1 = ["第一大节", ...blank(W - 1)];
+  s1[2] = "高等数学[理论]\r\n王老师\r\n1-0102\r\n3教101";
+  s1[9] = "高等数学\r\n王老师\r\n2-0102\r\n3教101";
+  G.push(s1);
+  const s2 = ["第二大节", ...blank(W - 1)];
+  s2[13] = "体育\r\n陈教练\r\n2-0304\r\n北操";
+  G.push(s2);
+  const s3 = ["第三大节", ...blank(W - 1)];
+  s3[4] = "自由选课说明\r\n见教务通知";
+  G.push(s3);
+
+  const r = api.parseTimetableGrid(G);
+  check('xls解析 门数与跳过数', r.courses.length === 2 && r.skipped.length === 1 && r.entries === 3,
+    JSON.stringify({ n: r.courses.length, sk: r.skipped.length, en: r.entries }));
+  const gao = r.courses.find(c => c.name === "高等数学");
+  check('xls解析 星期/节次/跨周合并', !!gao && gao.day === 2 && gao.sections === "1,2" && gao.weeks === "1-2周",
+    gao && JSON.stringify(gao));
+  check('xls解析 课名去性质后缀', !!gao && gao.name === "高等数学" && gao.position === "3教101", gao && gao.name);
+  const ty = r.courses.find(c => c.name === "体育");
+  check('xls解析 教师/教室/周六定位', !!ty && ty.teacher === "陈教练" && ty.day === 6 && ty.sections === "3,4" && ty.weeks === "2周",
+    ty && JSON.stringify(ty));
+  check('xls解析 学期与最大节次', r.semester === "2026-2027-1" && r.maxSection === 4, r.semester + " / " + r.maxSection);
+  const sch = api.buildSchedule(r.courses, r.maxSection, null);
+  check('xls解析 生成课表设置', sch.totalWeek === 2 && sch.morningNum === 4 && sch.afternoonNum === 0,
+    JSON.stringify({ tw: sch.totalWeek, m: sch.morningNum, a: sch.afternoonNum }));
+  const empty = api.parseTimetableGrid([["随便一个表","a","b"],["x","y","z"]]);
+  check('xls解析 非课表网格不假装成功', empty.courses.length === 0 && empty.entries === 0, JSON.stringify(empty));
 }
 
 console.log(`\n结果：${pass} 通过 / ${failn} 失败`);
