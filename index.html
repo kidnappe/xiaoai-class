@@ -88,13 +88,81 @@ table.rows tr:hover td{background:var(--bg)}
 footer{text-align:center;font-size:12px;color:var(--sub);margin-top:26px}
 .hidden{display:none}
 code{background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:0 4px;font-size:12px}
+/* ---------- 📎 文件选择标签（新增组件，不影响任何现有规则） ----------
+   为什么这么写：移动端浏览器普遍要求文件选择由用户手势【直接命中】控件才允许弹出；
+   “普通按钮 onclick 里调隐藏 input.click()”在不少移动内核上没反应。
+   改用 label[for] 后由浏览器原生转发点击，不需要 JS，也不会因为脚本误触发。 */
+.btnlike{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:9px;
+  border:1px solid var(--line);background:var(--card);color:var(--text);
+  font-family:inherit;font-size:14px;line-height:1.4;cursor:pointer;user-select:none}
+.btnlike:hover{border-color:var(--accent)}
+.btnlike.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+/* 不用 display:none：部分内核会拒绝激活被彻底隐藏的目标控件 */
+.pickfile{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);opacity:0}
+
+/* ============================================================================
+   移动端（窄屏）适配  ——  以窄屏为边界与桌面完全隔离
+   约定：
+     1) 手机端所有样式只允许写迳下面这一个 @media 块里；
+     2) 不要往上面的桌面规则里加任何东西，也不要改动上面的桌面规则；
+     3) 断点 760px：宽于此（桌面 / 平横屏）完全不受本块影响；
+     4) 本块只做“覆盖与微调”，不新增任何 HTML 结构、不改任何 JS。
+   ============================================================================ */
+@media (max-width:760px){
+  /* 表单字号必须 ≥16px：iOS Safari 对更小的字号会在聚焦时放大整页且不再缩回 */
+  textarea,input,select,button,.btnlike{font-size:16px}
+
+  /* 收紧外层与卡片内边距，把宽度还给内容 */
+  .wrap{padding:16px 10px 56px}
+  .card{padding:14px 12px;border-radius:12px;margin-bottom:14px}
+  .card h2{font-size:15px}
+
+  /* 方案标题行：窄屏下徽章不能和标题抢宽度（否则会断成两行难看的字） */
+  .opt-hd{flex-wrap:wrap;gap:6px}
+  .opt-hd .badge{white-space:nowrap}
+
+  /* 触控目标不小于 44px，避免按钮彼此贴着 */
+  .btns{gap:8px}
+  button,.link,.btnlike{min-height:44px;padding:10px 14px}
+  .chk{padding:6px 0}
+  /* 主行动按钮通栏：手机上最容易误触、也最不该藏在一排里 */
+  button.importbig{width:100%;font-size:17px}
+  .importbar{gap:10px;padding:12px}
+
+  /* 输入区高度：手机上 180px 的大框会把屏幕占满 */
+  textarea{min-height:110px}
+  #credPaste{min-height:64px}
+
+  /* ★ 课表预览（重点）：整张表横向滚动 + 左侧「节\天」列冻结。
+     8 列在 360px 宽里会被压到每人不到 45px，字完全读不了；
+     这里只给已有的 #grid 容器加 overflow，不改任何渲染代码。 */
+  #grid{overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:4px}
+  #grid table.grid{min-width:660px}
+  #grid table.grid th:first-child{position:sticky;left:0;z-index:3;background:var(--bg)}
+  #grid table.grid td:first-child{position:sticky;left:0;z-index:3;background:var(--card)}
+  #grid .cc{padding:5px 6px}
+  #grid .cc .n{font-size:13px}
+  #grid .cc .m{font-size:12px}
+  /* 手机上没有 hover，卡片右上角那个“可编辑”角标只会捣乱 */
+  #grid .cc .edit-hint{display:none}
+
+  /* 课程列表与课表设置表同理：能横滚、不挤压 */
+  #courseList{overflow-x:auto}
+  table.rows{min-width:520px}
+
+  /* 冲突提示与统计信息要能整行换行 */
+  .conflict-alert{display:flex;width:100%;align-items:flex-start;line-height:1.5}
+  .errlist,#stats{font-size:14px}
+  footer{font-size:12px;margin-top:18px}
+}
+
 </style>
 </head>
 <body>
 <div class="wrap">
 <header>
   <h1>小爱课表导入器 · 乘方教务版</h1>
-  <span class="tag">油猴一键提取 → 粘贴 → 导入小爱 · 适配乘方科技教务系统 · <b id="feVersion" title="前端版本">v1.4.3</b></span>
+  <span class="tag">油猴一键提取 → 粘贴 → 导入小爱 · 适配乘方科技教务系统 · <b id="feVersion" title="前端版本">v1.4.4</b></span>
   <div id="visitCounter" style="font-size:12px;color:var(--sub);margin-top:6px"></div>
 </header>
 
@@ -129,7 +197,7 @@ code{background:var(--bg);border:1px solid var(--line);border-radius:4px;padding
 
   <!-- 方案一：书签提取（主推：零安装、每次自动拉最新脚本）-->
   <div style="border:2px solid var(--accent);border-radius:10px;padding:16px 18px;background:rgba(79,110,247,.04)">
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+    <div class="opt-hd" style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
       <span style="font-size:15px;font-weight:700">🥇 书签提取（推荐）</span>
       <span class="badge" style="background:var(--accent);color:#fff;border-color:var(--accent)">零安装 · 每次自动最新</span>
     </div>
@@ -164,7 +232,7 @@ code{background:var(--bg);border:1px solid var(--line);border-radius:4px;padding
 
   <!-- 方案二：油猴脚本（备选：一次安装、常驻按钮）-->
   <div style="border:1px solid var(--line);border-radius:10px;padding:14px 18px;margin-top:12px">
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+    <div class="opt-hd" style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
       <span style="font-size:14px;font-weight:600">🥈 油猴脚本（一次安装，按钮常驻）</span>
       <span class="badge">长期常用可选</span>
     </div>
@@ -191,8 +259,9 @@ code{background:var(--bg);border:1px solid var(--line);border-radius:4px;padding
     <summary style="font-size:13px;font-weight:600;color:var(--sub);cursor:pointer">📎 上传教务导出的课表表格（.xls / .xlsx）</summary>
     <p class="hint" style="margin:10px 0 8px">你的教务系统如果能「导出课表为 Excel」（教务里通常在个人课表页顶部或右键菜单），可以直接选文件解析，<strong>不需要装扩展、不需要点书签</strong>，一次拿到整学期。表格结构不依赖任何接口字段，因此也不会出现星期偏移、节次认错这类问题。</p>
     <div class="btns" style="margin:0">
-      <input type="file" id="xlsFile" accept=".xls,.xlsx,.csv" style="display:none">
-      <button class="primary" id="btnXlsPick">📎 选择教务导出的表格文件</button>
+      <input type="file" id="xlsFile" accept=".xls,.xlsx,.csv" class="pickfile">
+      <label for="xlsFile" class="btnlike primary">📎 选择教务导出的表格文件</label>
+      <span class="hint" style="margin:0;font-size:12px">手机端请用系统浏览器打开本页（微信内置浏览器常不弹文件选择）</span>
     </div>
     <p class="hint" style="margin:10px 0 0;color:var(--err)"><strong>⚠ 一个已知限制：</strong>教务导出的表格里只有「第一大节 / 第二大节」这种<strong>节次号</strong>，<strong>没有每节课的上下课时刻</strong>（那个只能从接口里的 <code>qssj/jssj</code> 或官方作息表拿）。所以解析后请务必在下方「课表设置」里点 <strong>☀ 夏令时 / ❄ 冬令时</strong>（识别到河南师大时会自动选中），或手填时间表，否则导入小爱后时间会不准。</p>
     <div class="msg" id="xlsMsg"></div>
@@ -1623,8 +1692,12 @@ function xlsHandleFile(file){
   reader.readAsArrayBuffer(file);
 }
 
-$("btnXlsPick").onclick = function(){ $("xlsFile").click(); };
-$("xlsFile").onchange = function(){ xlsHandleFile(this.files && this.files[0]); };
+$("xlsFile").onchange = function(){
+  var f = this.files && this.files[0];
+  xlsHandleFile(f);
+  // 重置控件，否则选8同一个文件第二次不会再次触发 change（手机端经常需要重试同一个表）
+  try{ this.value = ""; }catch(e){}
+};
 
 (async function init(){
   // 跨后端模式提示（前端与 /api 分开部署时，后端地址来自 ?api= 或 localStorage）
