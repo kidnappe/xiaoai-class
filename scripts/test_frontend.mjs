@@ -66,7 +66,7 @@ const inline = html.match(/<script>([\s\S]*?)<\/script>\s*<\/body>/)[1];
 const sandbox = {};
 const fn = new Function('window', 'document', 'location', 'navigator', 'localStorage', 'fetch', 'setInterval', 'NodeFilter',
   inline + `
-  return { parseJcdm, cfRowsToCourses, normalizeWeeks, compressWeekNums, mergeWeekCourses, localParseSchedule, buildSchedule, jiaowuUrl, makeBookmarklet, isHtuHost, expandWeekInput, findConflicts, detectSeason, parseTimetableGrid };`);
+  return { parseJcdm, cfRowsToCourses, normalizeWeeks, compressWeekNums, mergeWeekCourses, localParseSchedule, buildSchedule, jiaowuUrl, makeBookmarklet, isHtuHost, expandWeekInput, findConflicts, detectSeason, parseTimetableGrid, renderGrid };`);
 const api = fn(global.window, global.document, global.location, global.navigator, global.localStorage, global.fetch, () => 0, global.NodeFilter);
 
 // 1. 节次代码解析（乘方教务三种格式）
@@ -250,6 +250,22 @@ check('jiaowuUrl 登录页', api.jiaowuUrl('login') === 'https://jxgl.myschool.e
     JSON.stringify({ tw: sch.totalWeek, m: sch.morningNum, a: sch.afternoonNum }));
   const empty = api.parseTimetableGrid([["随便一个表","a","b"],["x","y","z"]]);
   check('xls解析 非课表网格不假装成功', empty.courses.length === 0 && empty.entries === 0, JSON.stringify(empty));
+}
+
+// 13. 预览网格：同一格多门课必须纵向合并，不能逐行重复渲染
+{
+  const g = global.document.getElementById('grid');
+  g.innerHTML = '';
+  const mk = (n, t, p, sec, wk, si) => ({ name: n, teacher: t, position: p, day: 2, sections: sec, weeksText: wk, styleIdx: si });
+  api.renderGrid([
+    mk('甲课', '老师A', 'A101', '1,2', '1-19周', 0),
+    mk('乙课', '老师B', 'B202', '1,2', '2-18周(双)', 1),
+    mk('丙课', '老师C', 'C303', '5,6', '5-19周', 2),
+  ]);
+  const cards = (g.innerHTML.match(/class="cc"/g) || []).length;
+  const rs = (g.innerHTML.match(/rowspan="2"/g) || []).length;
+  check('网格 同格多课只渲染一次', cards === 3, '渲染出 ' + cards + ' 张卡（期望 3）');
+  check('网格 多课格与单课格都纵向合并', rs === 2, 'rowspan="2" 出现 ' + rs + ' 次（期望 2）');
 }
 
 console.log(`\n结果：${pass} 通过 / ${failn} 失败`);

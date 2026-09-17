@@ -113,8 +113,8 @@ code{background:var(--bg);border:1px solid var(--line);border-radius:4px;padding
   textarea,input,select,button,.btnlike{font-size:16px}
 
   /* 收紧外层与卡片内边距，把宽度还给内容 */
-  .wrap{padding:16px 10px 56px}
-  .card{padding:14px 12px;border-radius:12px;margin-bottom:14px}
+  .wrap{padding:16px 8px 56px}
+  .card{padding:14px 10px;border-radius:12px;margin-bottom:14px}
   .card h2{font-size:15px}
 
   /* 方案标题行：窄屏下徽章不能和标题抢宽度（否则会断成两行难看的字） */
@@ -133,22 +133,28 @@ code{background:var(--bg);border:1px solid var(--line);border-radius:4px;padding
   textarea{min-height:110px}
   #credPaste{min-height:64px}
 
-  /* ★ 课表预览（重点）：整张表横向滚动 + 左侧「节\天」列冻结。
-     8 列在 360px 宽里会被压到每人不到 45px，字完全读不了；
-     这里只给已有的 #grid 容器加 overflow，不改任何渲染代码。 */
-  #grid{overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:4px}
-  #grid table.grid{min-width:660px}
-  #grid table.grid th:first-child{position:sticky;left:0;z-index:3;background:var(--bg)}
-  #grid table.grid td:first-child{position:sticky;left:0;z-index:3;background:var(--card)}
-  #grid .cc{padding:5px 6px}
-  #grid .cc .n{font-size:13px}
-  #grid .cc .m{font-size:12px}
+  /* ★ 课表预览（重点）：手机上一律铺满整屏宽度、7 天全部可见，不再横向滚动。
+     思路：把 #grid 拉出卡片内边距（负边距 full-bleed）拿到最大宽度，
+     再把节次列压到 22px、去掉表格固定最小宽度，7 个星期各约 49px，
+     靠换行把信息完整展示（不截断、不用滑）。 */
+  #grid{margin:0 -10px;padding:0;overflow-x:auto}
+  #grid table.grid{min-width:0;width:100%;table-layout:fixed}
+  #grid table.grid th:first-child,
+  #grid table.grid td:first-child{width:22px !important;font-size:10px;padding:2px 0}
+  #grid table.grid th{padding:4px 1px;font-size:11px}
+  #grid table.grid td{padding:0;height:auto;min-height:28px}
+  #grid .cc{margin:1px;padding:3px 2px;border-radius:5px}
+  #grid .cc .n{font-size:11px;line-height:1.22;overflow-wrap:anywhere;word-break:break-word}
+  #grid .cc .m{font-size:10px;line-height:1.18;opacity:.92;overflow-wrap:anywhere}
   /* 手机上没有 hover，卡片右上角那个“可编辑”角标只会捣乱 */
   #grid .cc .edit-hint{display:none}
 
-  /* 课程列表与课表设置表同理：能横滚、不挤压 */
+  /* 课程列表与课表设置表：单位窄屏不得撑宽整页
+     （曾因无差别给 table.rows 加 min-width:520px，连带命中 #secTable，把整页撑到 539px）*/
   #courseList{overflow-x:auto}
-  table.rows{min-width:520px}
+  #courseList table.rows{min-width:460px}
+  #schedTimes{overflow-x:auto}
+  #secTable .secI{width:40px !important}
 
   /* 冲突提示与统计信息要能整行换行 */
   .conflict-alert{display:flex;width:100%;align-items:flex-start;line-height:1.5}
@@ -162,7 +168,7 @@ code{background:var(--bg);border:1px solid var(--line);border-radius:4px;padding
 <div class="wrap">
 <header>
   <h1>小爱课表导入器 · 乘方教务版</h1>
-  <span class="tag">油猴一键提取 → 粘贴 → 导入小爱 · 适配乘方科技教务系统 · <b id="feVersion" title="前端版本">v1.4.4</b></span>
+  <span class="tag">油猴一键提取 → 粘贴 → 导入小爱 · 适配乘方科技教务系统 · <b id="feVersion" title="前端版本">v1.4.5</b></span>
   <div id="visitCounter" style="font-size:12px;color:var(--sub);margin-top:6px"></div>
 </header>
 
@@ -569,6 +575,18 @@ function renderGrid(courses){
         }
       }
       if(list && list.length){
+        // 同一格有多门课时也要纵向合并。不做的话，这几门课会在该段的每一行里被重复渲染一遍
+        // （实测：周二 1-2 节两门课 → 渲染出 4 张卡、两行各高 191px，是预览“又长又空”的主因）
+        const keyOf = arr => arr.map(c=>[c.name,c.teacher,c.position,c.weeksText||""].join("~")).sort().join("|");
+        const k = keyOf(list);
+        let span = 1;
+        while(s+span <= maxSec && !occupied.has(d+"_"+(s+span)) &&
+              cells[d+"_"+(s+span)] && keyOf(cells[d+"_"+(s+span)]) === k) span++;
+        if(span > 1){
+          for(let i=1;i<span;i++) occupied.add(d+"_"+(s+i));
+          html += '<td rowspan="'+span+'">' + list.map(c=>courseCellInner(c)).join("") + '</td>';
+          continue;
+        }
         let inner = "";
         list.forEach(c=>{ inner += courseCellInner(c); });
         html += "<td>"+inner+"</td>";
