@@ -165,13 +165,30 @@ code{background:var(--bg);border:1px solid var(--line);border-radius:4px;padding
   footer{font-size:12px;margin-top:18px}
 }
 
+/* 窄屏安全模式：这里必须绕开媒体查询。
+   安卓浏览器一旦发现页面有横向溢出，就会放宽布局视口；而上面那个
+   @media (max-width:760px) 正是按布局视口判定的 —— 视口被撑过 760px 之后，
+   整套窄屏约束会同时失效，表格改用桌面规则铺开，溢出反而更大，形成自我
+   强化的循环（用户侧表现为「没载入课表时不能双指缩小，载入后忽然能缩小，
+   并且右侧出现空白」）。
+   data-narrow 由 guardWideLayout() 在实测到「文档确实比视口宽」时才挂到 <html> 上，
+   平时该属性不存在，所以下面这些规则对桌面端和正常窄屏都是惰性的。 */
+html[data-narrow="1"] #grid,
+html[data-narrow="1"] #courseList,
+html[data-narrow="1"] #schedTimes{overflow-x:auto;-webkit-overflow-scrolling:touch}
+html[data-narrow="1"] table.grid{min-width:0;width:100%;table-layout:fixed}
+html[data-narrow="1"] #courseList table.rows{min-width:0}
+html[data-narrow="1"] .errlist,
+html[data-narrow="1"] #stats{overflow-wrap:anywhere}
+html[data-narrow="1"] .wrap{padding-left:8px;padding-right:8px}
+
 </style>
 </head>
 <body>
 <div class="wrap">
 <header>
   <h1>小爱课表导入器 · 乘方教务版</h1>
-  <span class="tag"><span id="headerTagLead">油猴一键提取 → 粘贴 → 导入小爱</span> · 适配乘方科技教务系统 · <b id="feVersion" title="前端版本">v1.4.7</b></span>
+  <span class="tag"><span id="headerTagLead">油猴一键提取 → 粘贴 → 导入小爱</span> · 适配乘方科技教务系统 · <b id="feVersion" title="前端版本">v1.4.8</b></span>
   <div id="visitCounter" style="font-size:12px;color:var(--sub);margin-top:6px"></div>
 </header>
 
@@ -610,6 +627,7 @@ function renderGrid(courses){
   }
   html += "</table>";
   $("grid").innerHTML = html;
+  guardWideLayout();
 }
 function courseCell(c, rowspan){
   return '<td rowspan="'+rowspan+'">'+courseCellInner(c)+'</td>';
@@ -1726,6 +1744,48 @@ function xlsHandleFile(file){
 
 // ---- 移动端设备检测与布局调整 ----
 // 判据是「设备」而不是「窗口宽度」：桌面浏览器把窗口拉窄不该被重排。
+// 实测「文档是否真的比视口宽」，只在确实溢出时启用窄屏安全模式。
+// 之所以不靠 @media、也不靠 UA：媒体查询用的就是那个会被安卓放宽的布局视口。
+// 返回值：0 本来正常 / 1 有溢出但收窄已解决 / 2 收窄后仍溢出（在统计行留一条线索）
+function guardWideLayout(){
+  const de = document.documentElement;
+  // 读不到尺寸就直接当作正常：这个函数在顶层和 renderGrid 末尾都会被调，
+  // 抛异常会连带把后面所有按钮绑定弄挂。
+  if(!de || typeof de.scrollWidth !== "number" || typeof de.clientWidth !== "number") return 0;
+  const drop = () => { const n = document.getElementById("wideNote"); if(n && n.parentNode) n.parentNode.removeChild(n); };
+  if(de.scrollWidth - de.clientWidth <= 2){ de.removeAttribute("data-narrow"); drop(); return 0; }
+  de.setAttribute("data-narrow", "1");
+  const ov = de.scrollWidth - de.clientWidth;
+  if(ov <= 2){ drop(); return 1; }
+  // 还在溢出：把真正撑宽文档的元素找出来。判据是「自身越过视口右边界，
+  // 且父级没有用 overflow:auto/scroll/hidden 把它消化掉」——后者只会内部滚动，
+  // 不会撑宽整页，不排除掉就会误报（例如被 #grid 吸收的宽表格）。
+  const cw = de.clientWidth; let worst = null;
+  document.querySelectorAll("body *").forEach(el => {
+    const r = el.getBoundingClientRect();
+    if(r.right <= cw + 1 || r.width <= 0) return;
+    let po = "visible";
+    try{ po = getComputedStyle(el.parentElement || document.body).overflowX; }catch(e){}
+    if(po === "auto" || po === "scroll" || po === "hidden" || po === "clip") return;
+    if(!worst || r.right > worst.right){
+      worst = { right: Math.round(r.right), w: Math.round(r.width), tag: el.tagName.toLowerCase(),
+        id: el.id ? "#" + el.id : "",
+        cls: (typeof el.className === "string" && el.className.trim()) ? "." + el.className.trim().split(/\s+/)[0] : "" };
+    }
+  });
+  const box = $("stats");
+  if(box){
+    drop();
+    const p = document.createElement("div");
+    p.id = "wideNote";
+    p.style.cssText = "color:var(--sub);font-size:12px;margin-top:6px;overflow-wrap:anywhere";
+    p.textContent = "页面比屏幕宽 " + ov + "px，已自动按窄屏收紧表格；仍在溢出的元素："
+      + (worst ? (worst.tag + worst.id + worst.cls + "（宽 " + worst.w + "px，右缘 " + worst.right + "px）") : "未定位到具体元素");
+    box.appendChild(p);
+  }
+  return 2;
+}
+
 function isMobileDevice(ua){
   try{
     var s = (ua != null && ua !== "") ? String(ua) : (navigator.userAgent || "");
@@ -1772,6 +1832,10 @@ function applyMobileLayout(force){
   }catch(e){}
 }
 applyMobileLayout();
+// 横竖屏切换、键盘弹起收回等导致视口宽度变化时，重新实测一次溢出
+// （顶层调用一律包 try：这里招异常会让整页交互失效）
+try{ guardWideLayout(); }catch(e){}
+window.addEventListener("resize", () => { try{ guardWideLayout(); }catch(e){} });
 $("xlsFile").onchange = function(){
   var f = this.files && this.files[0];
   xlsHandleFile(f);

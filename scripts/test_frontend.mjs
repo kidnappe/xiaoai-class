@@ -22,12 +22,21 @@ function makeEl(id) {
     addEventListener() {}, appendChild() {}, scrollIntoView() {}, click() {},
     querySelector() { return null; }, querySelectorAll() { return []; },
     insertBefore() {}, closest() { return { remove() {} }; },
+    attrs: {},
+    setAttribute(k, v) { this.attrs[k] = String(v); },
+    getAttribute(k) { return k in this.attrs ? this.attrs[k] : null; },
+    removeAttribute(k) { delete this.attrs[k]; },
+    hasAttribute(k) { return k in this.attrs; },
   };
 }
 global.window = global;
+// 页面里有 window.addEventListener("resize", …)，Node 的 globalThis 没这个方法
+global.addEventListener = () => {};
 global.location = { href: 'https://jxgl.wyu.edu.cn/new/student/xsgrkb/week.page?xnxqdm=202601&zc=5', origin: 'https://jxgl.wyu.edu.cn', pathname: '/new/student/xsgrkb/week.page' };
 global.document = {
   hidden: true, readyState: 'complete', body: makeEl('body'), firstChild: null,
+  // 窄屏安全守卫 guardWideLayout 要读 documentElement 的尺寸，缺了它会在顶层抛错
+  documentElement: Object.assign(makeEl('html'), { scrollWidth: 390, clientWidth: 390 }),
   getElementById(id) { return els[id] || (els[id] = makeEl(id)); },
   createElement(tag) { return makeEl('new-' + tag); },
   addEventListener() {},
@@ -66,7 +75,7 @@ const inline = html.match(/<script>([\s\S]*?)<\/script>\s*<\/body>/)[1];
 const sandbox = {};
 const fn = new Function('window', 'document', 'location', 'navigator', 'localStorage', 'fetch', 'setInterval', 'NodeFilter',
   inline + `
-  return { parseJcdm, cfRowsToCourses, normalizeWeeks, compressWeekNums, mergeWeekCourses, localParseSchedule, buildSchedule, jiaowuUrl, makeBookmarklet, isHtuHost, expandWeekInput, findConflicts, detectSeason, parseTimetableGrid, renderGrid, isMobileDevice, applyMobileLayout };`);
+  return { parseJcdm, cfRowsToCourses, normalizeWeeks, compressWeekNums, mergeWeekCourses, localParseSchedule, buildSchedule, jiaowuUrl, makeBookmarklet, isHtuHost, expandWeekInput, findConflicts, detectSeason, parseTimetableGrid, renderGrid, isMobileDevice, applyMobileLayout, guardWideLayout };`);
 const api = fn(global.window, global.document, global.location, global.navigator, global.localStorage, global.fetch, () => 0, global.NodeFilter);
 
 // 1. 节次代码解析（乘方教务三种格式）
@@ -278,6 +287,24 @@ check('jiaowuUrl 登录页', api.jiaowuUrl('login') === 'https://jxgl.myschool.e
   api.applyMobileLayout(true);
   check('移动端重排 强制时切换说明版本', fd.hidden === true && fm.hidden === false, 'fd=' + fd.hidden + ' fm=' + fm.hidden);
   check('移动端重排 顶部与卡片文案同步变化', /导出教务表格/.test(lead.textContent) && /上传教务导出的表格/.test(hint.innerHTML));
+}
+
+// 16. 窄屏安全守卫：只在实测到真实横向溢出时才启用，并且能自行撤销
+{
+  const de = global.document.documentElement;
+  check('溢出守卫 样式规则在场', /html\[data-narrow="1"\][\s\S]*#grid/.test(html));
+  de.scrollWidth = 390; de.clientWidth = 390;
+  check('溢出守卫 正常时不启用', api.guardWideLayout() === 0 && !de.hasAttribute('data-narrow'));
+  de.scrollWidth = 900; de.clientWidth = 390;
+  const r = api.guardWideLayout();
+  check('溢出守卫 溢出时启用安全模式', r === 2 && de.getAttribute('data-narrow') === '1',
+    'r=' + r + ' attr=' + de.getAttribute('data-narrow'));
+  de.scrollWidth = 390;
+  check('溢出守卫 恢复后自动撤销', api.guardWideLayout() === 0 && !de.hasAttribute('data-narrow'));
+  const save = de.scrollWidth;
+  de.scrollWidth = undefined;
+  check('溢出守卫 读不到尺寸时不抛错', api.guardWideLayout() === 0);
+  de.scrollWidth = save;
 }
 
 console.log(`\n结果：${pass} 通过 / ${failn} 失败`);
