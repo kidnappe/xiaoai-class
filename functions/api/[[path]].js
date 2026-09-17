@@ -763,6 +763,9 @@ async function handleApi(method, path, request, sid, env) {
     }
 
     if (path === "/api/import") {
+      // phase 必须声明在 try 之外：832 行的 catch 与 try 是平级作用域，
+      // 放里面的话 catch 永远读不到它，任何真实错误都会被 ReferenceError 吞掉。
+      let phase = "参数校验";
       try {
         const api = requireApi(sid);
         const ctId = parseInt(body.ctId, 10);
@@ -770,7 +773,7 @@ async function handleApi(method, path, request, sid, env) {
         const courses = body.courses || [];
         if (!courses.length) return fail("没有课程可导入");
         // 小爱读写绑定"当前使用课表"：目标不是当前就先切过去（导后保持该课表为在用，下拉选择才有意义）
-        let phase = "切换当前课表";
+        phase = "切换当前课表";
         let switched = false, switchErr = null;
         try {
           const tbls = await api.listTables();

@@ -98,6 +98,25 @@ function check(name, cond, detail) {
   const r = await call(mod.onRequestPost, req('POST', '/api/ai_parse', { text: '周一 第1-2节 高等数学' }));
   check('ai_parse 缺配置提示', r.data.ok === false && r.data.error.includes('AI_API_KEY'), JSON.stringify(r.data));
 }
+// 8.5 /api/import 的错误必须可读：曾因 phase 声明在 try 内、catch 读不到，
+//     任何失败都被 ReferenceError 吞成「服务器内部错误：phase is not defined」。
+{
+  const r = await call(mod.onRequestPost, req('POST', '/api/import', { ctId: 1, courses: [{ name: 'x' }] }, 'no-such-sid-' + Date.now()));
+  check('import 未连接时报真实原因而非 ReferenceError',
+    r.data.ok === false && r.data.error.includes('未连接') && !/phase is not defined/.test(r.data.error),
+    JSON.stringify(r.data));
+}
+// 8.6 源码层面钉死：let phase 必须出现在 /api/import 的 try 之前
+{
+  const src = fs.readFileSync(funcFile, 'utf8');
+  const at = src.indexOf('path === "/api/import"');
+  const tryAt = src.indexOf('try {', at);
+  const declAt = src.indexOf('let phase', at);
+  const asgnAt = src.indexOf('phase = "切换当前课表"', at);
+  check('import 的 phase 声明在 try 之外',
+    at >= 0 && declAt >= 0 && declAt < tryAt && asgnAt > tryAt);
+}
+
 // 9. CORS 预检
 {
   const resp = await mod.onRequestOptions({ request: req('OPTIONS', '/api/parse', {}), env: {}, ctx: {} });
