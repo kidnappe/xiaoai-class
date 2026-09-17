@@ -66,7 +66,7 @@ const inline = html.match(/<script>([\s\S]*?)<\/script>\s*<\/body>/)[1];
 const sandbox = {};
 const fn = new Function('window', 'document', 'location', 'navigator', 'localStorage', 'fetch', 'setInterval', 'NodeFilter',
   inline + `
-  return { parseJcdm, cfRowsToCourses, normalizeWeeks, compressWeekNums, mergeWeekCourses, localParseSchedule, buildSchedule, jiaowuUrl, makeBookmarklet, isHtuHost, expandWeekInput, findConflicts, detectSeason, parseTimetableGrid, renderGrid };`);
+  return { parseJcdm, cfRowsToCourses, normalizeWeeks, compressWeekNums, mergeWeekCourses, localParseSchedule, buildSchedule, jiaowuUrl, makeBookmarklet, isHtuHost, expandWeekInput, findConflicts, detectSeason, parseTimetableGrid, renderGrid, isMobileDevice, applyMobileLayout };`);
 const api = fn(global.window, global.document, global.location, global.navigator, global.localStorage, global.fetch, () => 0, global.NodeFilter);
 
 // 1. 节次代码解析（乘方教务三种格式）
@@ -266,6 +266,18 @@ check('jiaowuUrl 登录页', api.jiaowuUrl('login') === 'https://jxgl.myschool.e
   const rs = (g.innerHTML.match(/rowspan="2"/g) || []).length;
   check('网格 同格多课只渲染一次', cards === 3, '渲染出 ' + cards + ' 张卡（期望 3）');
   check('网格 多课格与单课格都纵向合并', rs === 2, 'rowspan="2" 出现 ' + rs + ' 次（期望 2）');
+}
+
+// 15. 移动端重排：桌面完全不触发；强制时切换成表格版说明
+{
+  const D = global.document;
+  const fd = D.getElementById('flowDesktop'), fm = D.getElementById('flowMobile');
+  const lead = D.getElementById('headerTagLead'), hint = D.getElementById('cardJiaowuHint');
+  api.applyMobileLayout();
+  check('移动端重排 桌面不触发', fd.hidden !== true && fm.hidden !== false && !/上传教务导出的表格/.test(hint.innerHTML));
+  api.applyMobileLayout(true);
+  check('移动端重排 强制时切换说明版本', fd.hidden === true && fm.hidden === false, 'fd=' + fd.hidden + ' fm=' + fm.hidden);
+  check('移动端重排 顶部与卡片文案同步变化', /导出教务表格/.test(lead.textContent) && /上传教务导出的表格/.test(hint.innerHTML));
 }
 
 console.log(`\n结果：${pass} 通过 / ${failn} 失败`);

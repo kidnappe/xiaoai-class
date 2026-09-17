@@ -168,7 +168,7 @@ code{background:var(--bg);border:1px solid var(--line);border-radius:4px;padding
 <div class="wrap">
 <header>
   <h1>小爱课表导入器 · 乘方教务版</h1>
-  <span class="tag">油猴一键提取 → 粘贴 → 导入小爱 · 适配乘方科技教务系统 · <b id="feVersion" title="前端版本">v1.4.5</b></span>
+  <span class="tag"><span id="headerTagLead">油猴一键提取 → 粘贴 → 导入小爱</span> · 适配乘方科技教务系统 · <b id="feVersion" title="前端版本">v1.4.6</b></span>
   <div id="visitCounter" style="font-size:12px;color:var(--sub);margin-top:6px"></div>
 </header>
 
@@ -189,7 +189,7 @@ code{background:var(--bg);border:1px solid var(--line);border-radius:4px;padding
 
 <div class="card" id="cardJiaowu">
   <h2>📥 2 · 提取课表 <span class="tag" style="margin-left:8px;background:var(--bg);border:1px solid var(--line);color:var(--sub);padding:1px 8px;font-size:11px">乘方教务</span></h2>
-  <p class="hint">登录你学校的乘方教务系统后，用<strong>提取书签</strong>（推荐，零安装）在教务页面点一下即可逐周扫描整学期课表、自动合并成标准 JSON 并复制到剪贴板。</p>
+  <p class="hint" id="cardJiaowuHint">登录你学校的乘方教务系统后，用<strong>提取书签</strong>（推荐，零安装）在教务页面点一下即可逐周扫描整学期课表、自动合并成标准 JSON 并复制到剪贴板。</p>
 
   <div style="margin-bottom:10px">
     <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:6px">🏫 你的教务系统地址</div>
@@ -202,7 +202,7 @@ code{background:var(--bg);border:1px solid var(--line);border-radius:4px;padding
   </div>
 
   <!-- 方案一：书签提取（主推：零安装、每次自动拉最新脚本）-->
-  <div style="border:2px solid var(--accent);border-radius:10px;padding:16px 18px;background:rgba(79,110,247,.04)">
+  <div id="bookmarkBox" style="border:2px solid var(--accent);border-radius:10px;padding:16px 18px;background:rgba(79,110,247,.04)">
     <div class="opt-hd" style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
       <span style="font-size:15px;font-weight:700">🥇 书签提取（推荐）</span>
       <span class="badge" style="background:var(--accent);color:#fff;border-color:var(--accent)">零安装 · 每次自动最新</span>
@@ -237,7 +237,7 @@ code{background:var(--bg);border:1px solid var(--line);border-radius:4px;padding
   </div>
 
   <!-- 方案二：油猴脚本（备选：一次安装、常驻按钮）-->
-  <div style="border:1px solid var(--line);border-radius:10px;padding:14px 18px;margin-top:12px">
+  <div id="userscriptBox" style="border:1px solid var(--line);border-radius:10px;padding:14px 18px;margin-top:12px">
     <div class="opt-hd" style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
       <span style="font-size:14px;font-weight:600">🥈 油猴脚本（一次安装，按钮常驻）</span>
       <span class="badge">长期常用可选</span>
@@ -261,7 +261,7 @@ code{background:var(--bg);border:1px solid var(--line);border-radius:4px;padding
   <div class="msg" id="jiaowuMsg"></div>
 
   <!-- 方案三：教务导出的课表表格上传（.xls / .xlsx）-->
-  <details open style="margin-top:14px;border:1px solid var(--line);border-radius:10px;padding:12px 16px">
+  <details open id="xlsBox" style="margin-top:14px;border:1px solid var(--line);border-radius:10px;padding:12px 16px">
     <summary style="font-size:13px;font-weight:600;color:var(--sub);cursor:pointer">📎 上传教务导出的课表表格（.xls / .xlsx）</summary>
     <p class="hint" style="margin:10px 0 8px">你的教务系统如果能「导出课表为 Excel」（教务里通常在个人课表页顶部或右键菜单），可以直接选文件解析，<strong>不需要装扩展、不需要点书签</strong>，一次拿到整学期。表格结构不依赖任何接口字段，因此也不会出现星期偏移、节次认错这类问题。</p>
     <div class="btns" style="margin:0">
@@ -272,7 +272,8 @@ code{background:var(--bg);border:1px solid var(--line);border-radius:4px;padding
     <p class="hint" style="margin:10px 0 0;color:var(--err)"><strong>⚠ 一个已知限制：</strong>教务导出的表格里只有「第一大节 / 第二大节」这种<strong>节次号</strong>，<strong>没有每节课的上下课时刻</strong>（那个只能从接口里的 <code>qssj/jssj</code> 或官方作息表拿）。所以解析后请务必在下方「课表设置」里点 <strong>☀ 夏令时 / ❄ 冬令时</strong>（识别到河南师大时会自动选中），或手填时间表，否则导入小爱后时间会不准。</p>
     <div class="msg" id="xlsMsg"></div>
   </details>
-  <div style="margin-top:14px;padding:12px 14px;background:var(--bg);border-radius:8px;border:1px solid var(--line)">
+  <div id="flowBox" style="margin-top:14px;padding:12px 14px;background:var(--bg);border-radius:8px;border:1px solid var(--line)">
+   <div id="flowDesktop">
     <div style="font-size:13px;font-weight:600;color:var(--sub);margin-bottom:8px">📘 完整流程（书签版，5 步）</div>
     <ol style="line-height:2.2;font-size:13px;padding-left:20px;margin:0">
       <li><strong>存下提取书签</strong>：点「📚 复制提取书签」→ 按 <code>Ctrl+Shift+B</code> 显示书签栏 → 书签栏右键「添加网页」→ 网址框粘贴 → 保存。（只需做一次）</li>
@@ -282,8 +283,18 @@ code{background:var(--bg);border:1px solid var(--line);border-radius:4px;padding
       <li><strong>导入到小爱</strong>：回本页下方「<strong>4 · 粘贴课程 JSON 并导入</strong>」区 → 点「📋 从剪贴板粘贴」（或直接 Ctrl+V）自动填入并解析预览 → 在「<strong>3 · 选择目标课表</strong>」下拉选一个小爱已有课表或新建 → 可勾选「导入前清空」「同步课表设置」→ 点「🚀 导入到小爱」。</li>
     </ol>
     <p class="hint" style="margin:8px 0 0;line-height:1.6">学期从页面的学期下拉框读取，提取浮窗会写明「学期 X，来源 Y」便于核对；识别不到时（提取报错带学期码）可右键教务页面的「📚 提取课表」按钮 → 手动钉死学期代码（如 <code>202601</code> 代表 2026 秋季学期）。长期用更省事可改用下方「🥈 油猴脚本」，一次安装后按钮常驻。</p>
-  </div>
-
+   </div>
+   <div id="flowMobile" hidden>
+    <div style="font-size:13px;font-weight:600;color:var(--sub);margin-bottom:8px">📘 完整流程（手机版 · 表格上传，5 步）</div>
+    <ol style="line-height:2.2;font-size:13px;padding-left:20px;margin:0">
+      <li><strong>登录教务并找到导出入口</strong>：上面输入框填学校地址 → 点「 打开登录页」登录 → 进「 个人课表」，找「导出课表 / 导出 Excel」（有的学校只在电脑版页面显示，那样就先在电脑上导出再把文件传到手机）。</li>
+      <li><strong>导出并保存</strong>：点导出后，手机会把 .xls 存进「下载」。</li>
+      <li><strong>回本页选文件</strong>：点上面的「 选择教务导出的表格文件」→ 选中刚下载的那个 .xls。</li>
+      <li><strong>核对预览</strong>：页面会自动生成星期 × 节次的彩色课表，核对星期、节次、周次是否与教务一致。</li>
+      <li><strong>套用作息后导入</strong>：表格里没有上下课时刻，所以在「课表设置」里点 <strong>☀ 夏令时 / ❄ 冬令时</strong>（识别到河南师大时会自动选中）→ 再点「🚀 导入到小爱」。</li>
+    </ol>
+    <p class="hint" style="margin:8px 0 0;line-height:1.6">手机上装不了油猴扩展、移动浏览器也不执行书签脚本，那两种方式请到电脑上用（已收进下面的折叠区）。</p>
+   </div>
   <!-- 方案四：智能提取（兜底，折叠）-->
   <details style="margin-top:14px;border:1px dashed var(--line);border-radius:10px;padding:12px 16px">
     <summary style="font-size:13px;font-weight:600;color:var(--sub);cursor:pointer">🤖 智能提取（油猴/书签都用不了时的兜底）</summary>
@@ -1710,6 +1721,54 @@ function xlsHandleFile(file){
   reader.readAsArrayBuffer(file);
 }
 
+// ---- 移动端设备检测与布局调整 ----
+// 判据是「设备」而不是「窗口宽度」：桌面浏览器把窗口拉窄不该被重排。
+function isMobileDevice(ua){
+  try{
+    var s = (ua != null && ua !== "") ? String(ua) : (navigator.userAgent || "");
+    if(/Android|iPhone|iPad|iPod|Mobile|HarmonyOS|Windows Phone|BlackBerry|Opera Mini/i.test(s)) return true;
+    // iPadOS 的 UA 会伪装成 Mac，用触摸点数补一个判据
+    return /Macintosh/.test(s) && (navigator.maxTouchPoints || 0) > 1;
+  }catch(e){ return false; }
+}
+// 手机上唯一能用的通道是「上传教务导出的表格」，所以把它提到第一位，并把手机装不了的
+// 书签 / 油猴收进一个默认折叠的容器，操作说明也换成表格版。
+// 非移动设备直接 return，DOM 一个节点都不动 —— 桌面端外观与行为完全不变。
+function applyMobileLayout(force){
+  if(!force && !isMobileDevice()) return;
+  try{
+    var card=document.getElementById("cardJiaowu");
+    var xls=document.getElementById("xlsBox");
+    var bm=document.getElementById("bookmarkBox");
+    var us=document.getElementById("userscriptBox");
+    if(!card||!xls||!bm||!us) return;
+
+    // 1) 表格上传提到第一位（教务地址区之后、书签块之前）
+    //    insertBefore 对已在该位置的节点是幂等的，所以无需判断先后
+    if(xls.parentNode===card && bm.parentNode===card) card.insertBefore(xls, bm);
+
+    // 2) 书签 / 油猴收进默认折叠的容器，紧跟在表格区之后
+    var box=document.getElementById("pcWays");
+    if(!box){
+      box=document.createElement("details");
+      box.id="pcWays";
+      box.style.cssText="margin-top:14px;border:1px solid var(--line);border-radius:10px;padding:12px 16px";
+      box.innerHTML='<summary style="font-size:13px;font-weight:600;color:var(--sub);cursor:pointer">💻 其他提取方式（书签 / 油猴脚本 · 手机上装不了，需在电脑上操作）</summary>'
+        + '<p class="hint" style="margin:10px 0 0">下面两种方式都需要电脑：书签要用书签栏、油猴脚本要装 Tampermonkey 扩展，移动浏览器都不支持。</p>';
+      if(xls.parentNode===card) card.insertBefore(box, xls.nextSibling); else card.appendChild(box);
+    }
+    box.appendChild(bm); box.appendChild(us);
+
+    // 3) 操作说明切成手机版
+    var mo=document.getElementById("flowMobile"), de=document.getElementById("flowDesktop");
+    if(mo&&de){ de.hidden=true; mo.hidden=false; }
+    var h=document.getElementById("cardJiaowuHint");
+    if(h) h.innerHTML='登录你学校的乘方教务系统后，用下面的 <strong> 上传教务导出的表格</strong> 一步拿到整学期课表 —— 手机上不需要装扩展、也不需要点书签。';
+    var lead=document.getElementById("headerTagLead");
+    if(lead) lead.textContent="导出教务表格 → 上传 → 导入小爱";
+  }catch(e){}
+}
+applyMobileLayout();
 $("xlsFile").onchange = function(){
   var f = this.files && this.files[0];
   xlsHandleFile(f);
