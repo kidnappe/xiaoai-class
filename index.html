@@ -149,6 +149,9 @@ code{background:var(--bg);border:1px solid var(--line);border-radius:4px;padding
   /* 手机上没有 hover，卡片右上角那个“可编辑”角标只会捣乱 */
   #grid .cc .edit-hint{display:none}
 
+  /* 手机流程第一步就是“打开登录页 / 个人课表”，把这两个入口做成主色按钮 */
+  #linkLogin,#linkKb{flex:1 1 46%;text-align:center;justify-content:center;background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+
   /* 课程列表与课表设置表：单位窄屏不得撑宽整页
      （曾因无差别给 table.rows 加 min-width:520px，连带命中 #secTable，把整页撑到 539px）*/
   #courseList{overflow-x:auto}
@@ -168,7 +171,7 @@ code{background:var(--bg);border:1px solid var(--line);border-radius:4px;padding
 <div class="wrap">
 <header>
   <h1>小爱课表导入器 · 乘方教务版</h1>
-  <span class="tag"><span id="headerTagLead">油猴一键提取 → 粘贴 → 导入小爱</span> · 适配乘方科技教务系统 · <b id="feVersion" title="前端版本">v1.4.6</b></span>
+  <span class="tag"><span id="headerTagLead">油猴一键提取 → 粘贴 → 导入小爱</span> · 适配乘方科技教务系统 · <b id="feVersion" title="前端版本">v1.4.7</b></span>
   <div id="visitCounter" style="font-size:12px;color:var(--sub);margin-top:6px"></div>
 </header>
 
@@ -287,7 +290,7 @@ code{background:var(--bg);border:1px solid var(--line);border-radius:4px;padding
    <div id="flowMobile" hidden>
     <div style="font-size:13px;font-weight:600;color:var(--sub);margin-bottom:8px">📘 完整流程（手机版 · 表格上传，5 步）</div>
     <ol style="line-height:2.2;font-size:13px;padding-left:20px;margin:0">
-      <li><strong>登录教务并找到导出入口</strong>：上面输入框填学校地址 → 点「 打开登录页」登录 → 进「 个人课表」，找「导出课表 / 导出 Excel」（有的学校只在电脑版页面显示，那样就先在电脑上导出再把文件传到手机）。</li>
+      <li><strong>登录教务并找到导出入口</strong>：上面输入框填学校地址 → 点「 打开登录页」登录 → 进「 个人课表」，用页面上的「导出课表 / 导出 Excel」导出——<strong>手机浏览器里就能导出，不用回电脑</strong>。</li>
       <li><strong>导出并保存</strong>：点导出后，手机会把 .xls 存进「下载」。</li>
       <li><strong>回本页选文件</strong>：点上面的「 选择教务导出的表格文件」→ 选中刚下载的那个 .xls。</li>
       <li><strong>核对预览</strong>：页面会自动生成星期 × 节次的彩色课表，核对星期、节次、周次是否与教务一致。</li>
