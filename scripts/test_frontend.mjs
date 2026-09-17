@@ -307,5 +307,14 @@ check('jiaowuUrl 登录页', api.jiaowuUrl('login') === 'https://jxgl.myschool.e
   de.scrollWidth = save;
 }
 
+// 17. 窄屏下不得出现撑宽整页的不可断 token（实例：卡片 4 里示例 JSON 的 <code>
+//     实测把整页撑宽 7px，而卡片 4 平时 display:none，所以只在载入课表后出现）
+{
+  const mb = html.slice(html.indexOf('@media (max-width:760px)'));
+  const mediaBlock = mb.slice(0, mb.indexOf('\n}') + 2);
+  check('窄屏 code 允许断行', /code\{[^}]*overflow-wrap:break-word/.test(mediaBlock), '未在 @media 块内找到 code 的 overflow-wrap 规则');
+  check('安全模式也覆盖 code', /html\[data-narrow="1"\][^{]*code\{[^}]*overflow-wrap/.test(html));
+}
+
 console.log(`\n结果：${pass} 通过 / ${failn} 失败`);
 process.exit(failn ? 1 : 0);

@@ -159,6 +159,11 @@ code{background:var(--bg);border:1px solid var(--line);border-radius:4px;padding
   #schedTimes{overflow-x:auto}
   #secTable .secI{width:40px !important}
 
+  /* 提示里的示例 JSON（[{"name":"…"}]）是一整串不带空格的 token，浏览器无法断行，
+     窄屏下会把卡片撑破、进而撑宽整页（实测：卡片 4 显示后溢出 7px）。
+     卡片 4 平时是 display:none，不参与布局，所以这个溢出只在载入课表后出现。 */
+  code{overflow-wrap:break-word}
+
   /* 冲突提示与统计信息要能整行换行 */
   .conflict-alert{display:flex;width:100%;align-items:flex-start;line-height:1.5}
   .errlist,#stats{font-size:14px}
@@ -180,6 +185,7 @@ html[data-narrow="1"] table.grid{min-width:0;width:100%;table-layout:fixed}
 html[data-narrow="1"] #courseList table.rows{min-width:0}
 html[data-narrow="1"] .errlist,
 html[data-narrow="1"] #stats{overflow-wrap:anywhere}
+html[data-narrow="1"] code{overflow-wrap:break-word}
 html[data-narrow="1"] .wrap{padding-left:8px;padding-right:8px}
 
 </style>
@@ -188,7 +194,7 @@ html[data-narrow="1"] .wrap{padding-left:8px;padding-right:8px}
 <div class="wrap">
 <header>
   <h1>小爱课表导入器 · 乘方教务版</h1>
-  <span class="tag"><span id="headerTagLead">油猴一键提取 → 粘贴 → 导入小爱</span> · 适配乘方科技教务系统 · <b id="feVersion" title="前端版本">v1.4.8</b></span>
+  <span class="tag"><span id="headerTagLead">油猴一键提取 → 粘贴 → 导入小爱</span> · 适配乘方科技教务系统 · <b id="feVersion" title="前端版本">v1.4.9</b></span>
   <div id="visitCounter" style="font-size:12px;color:var(--sub);margin-top:6px"></div>
 </header>
 
