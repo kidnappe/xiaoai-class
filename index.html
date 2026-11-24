@@ -238,7 +238,7 @@ html[data-narrow="1"] .wrap{padding-left:8px;padding-right:8px}
 <header>
   <a class="repo" href="https://github.com/kidnappe/xiaoai-class" target="_blank" rel="noopener"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>项目源码仓库</a>
   <h1>小爱课表导入器</h1>
-  <span class="tag"><b id="feVersion">v1.5.5</b></span>
+  <span class="tag"><b id="feVersion">v1.5.6</b></span>
   <button id="btnTheme" class="themeBtn" type="button" aria-label="切换夜间模式"></button>
 </header>
 
@@ -324,7 +324,6 @@ html[data-narrow="1"] .wrap{padding-left:8px;padding-right:8px}
       <label for="xlsFile" class="btnlike primary"><span class="ico" data-icon="upload-one"></span>选择表格文件</label>
       <span class="hint" style="margin:0;font-size:12px">.xls / .xlsx / .csv</span>
     </div>
-    <p class="hint" style="margin:10px 0 0;color:var(--err)"><span class="ico" data-icon="attention"></span>表格不含上下课时刻；解析后请在「课表设置」补上作息。</p>
     <div class="msg" id="xlsMsg"></div>
   </details>
   <!-- 方案四：手动粘贴解析（兜底，折叠）-->
@@ -1035,10 +1034,16 @@ function exportSourceXls(src, courses){
   const out = XLSX.write(wb, { bookType: src.bookType || "xls", type:"array" });
   return { out: out, unsupported: Array.from(unsupported).sort((a,b)=>a-b) };
 }
-function exportPreviewXls(){
+async function exportPreviewXls(){
   const courses = state.courses || [];
   if(!courses.length){ alert("还没有解析出课程，请先「解析预览」。"); return; }
-  if(typeof XLSX === "undefined"){ alert("导出库未加载（vendor/xlsx.full.min.js），请刷新页面后重试。"); return; }
+  if(typeof XLSX === "undefined"){
+    msg($("importMsg"), "表格组件未加载，正在重新加载…", true);
+    if(!(await ensureXlsx())){
+      alert("表格组件加载失败。本地请用「启动导入器.bat」打开；线上请检查网络后刷新重试。");
+      return;
+    }
+  }
 
   if(state.xlsSource){
     try{
@@ -2219,13 +2224,45 @@ function parseTimetableGrid(grid){
            colWeek: colWeek, colDay: colDay, dayWeekCol: dayWeekCol, weekSectionRow: weekSectionRow, rowSection: rowSection };
 }
 
+// 表格组件偶尔会因网络或缓存没拉全；需要时重试加载，成功后继续原操作
+let xlsxLoading = null;
+function ensureXlsx(){
+  if(typeof XLSX !== "undefined") return Promise.resolve(true);
+  if(xlsxLoading) return xlsxLoading;
+  xlsxLoading = new Promise(function(resolve){
+    var attempt = 0;
+    function load(){
+      attempt++;
+      var s = document.createElement("script");
+      s.src = "vendor/xlsx.full.min.js?retry=" + attempt + "&t=" + Date.now();
+      s.async = true;
+      s.onload = function(){
+        xlsxLoading = null;
+        resolve(typeof XLSX !== "undefined");
+      };
+      s.onerror = function(){
+        if(s.parentNode) s.parentNode.removeChild(s);
+        if(attempt < 3) setTimeout(load, 700);
+        else { xlsxLoading = null; resolve(false); }
+      };
+      (document.head || document.documentElement).appendChild(s);
+    }
+    load();
+  });
+  return xlsxLoading;
+}
+
 // 选文件 → 解析 → 灌进现有的 JSON 框 → 走现有「解析预览」整条链路（验证/预览/冲突高亮全部复用）
 function xlsHandleFile(file){
   var m = $("xlsMsg");
   function say(t, ok){ if(m){ m.className = "msg " + (ok ? "ok" : "err"); m.textContent = t; } }
   if(!file) return;
   if(typeof XLSX === "undefined"){
-    say("解析库未加载（vendor/xlsx.full.min.js 没拉到）。本地用请确认用 启动导入器.bat 打开页面；线上用请刷新重试。", false);
+    say("表格组件未加载，正在重新加载…", true);
+    ensureXlsx().then(function(ok){
+      if(!ok){ say("表格组件加载失败。本地请用「启动导入器.bat」打开；线上请检查网络后刷新重试。", false); return; }
+      xlsHandleFile(file);
+    });
     return;
   }
   var reader = new FileReader();

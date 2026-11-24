@@ -240,6 +240,9 @@ check('jiaowuUrl 登录页', api.jiaowuUrl('login') === 'https://jxgl.myschool.e
     JSON.stringify({ s: out.schoolSchedules.summer.effective2026, w: out.schoolSchedules.winter.effective2026 }));
   check('JSON导出 不改内部字段', Object.keys(out).join(',') === 'school,campus,exportedAt,schedule,schoolSchedules,courses',
     Object.keys(out).join(','));
+  check('上传区 不再常驻红色缺时间提示', !/表格不含上下课时刻；解析后请在/.test(html));
+  check('表格组件 缺失时自动重载', /function ensureXlsx\(\)/.test(inline) &&
+    /xlsx\.full\.min\.js\?retry=/.test(inline) && /await ensureXlsx\(\)/.test(inline));
 }
 
 // 12. 教务导出的 .xls 网格 → 标准课程（合成网格，不含真实个人信息）
