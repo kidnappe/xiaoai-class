@@ -70,12 +70,12 @@ global.fetch = async (url, opt) => {
 
 // ---- 载入 index.html 的内联脚本并执行（顶层 await 转 IIFE）----
 const html = fs.readFileSync(path.join(root, 'index.html'), 'utf-8');
-const inline = html.match(/<script>([\s\S]*?)<\/script>\s*<\/body>/)[1];
+const inline = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].pop()[1];
 // 提供全局 $ / 状态，模拟页面加载完成后的可调用函数集
 const sandbox = {};
 const fn = new Function('window', 'document', 'location', 'navigator', 'localStorage', 'fetch', 'setInterval', 'NodeFilter',
   inline + `
-  return { parseJcdm, cfRowsToCourses, normalizeWeeks, compressWeekNums, mergeWeekCourses, localParseSchedule, buildSchedule, jiaowuUrl, makeBookmarklet, isHtuHost, expandWeekInput, findConflicts, detectSeason, parseTimetableGrid, renderGrid, isMobileDevice, applyMobileLayout, guardWideLayout };`);
+  return { parseJcdm, cfRowsToCourses, normalizeWeeks, compressWeekNums, mergeWeekCourses, localParseSchedule, buildSchedule, jiaowuUrl, makeBookmarklet, isHtuHost, expandWeekInput, findConflicts, detectSeason, parseTimetableGrid, renderGrid, isMobileDevice, applyMobileLayout, guardWideLayout, xlsSectionChunks };`);
 const api = fn(global.window, global.document, global.location, global.navigator, global.localStorage, global.fetch, () => 0, global.NodeFilter);
 
 // 1. 节次代码解析（乘方教务三种格式）
@@ -254,6 +254,12 @@ check('jiaowuUrl 登录页', api.jiaowuUrl('login') === 'https://jxgl.myschool.e
   check('xls解析 教师/教室/周六定位', !!ty && ty.teacher === "陈教练" && ty.day === 6 && ty.sections === "3,4" && ty.weeks === "2周",
     ty && JSON.stringify(ty));
   check('xls解析 学期与最大节次', r.semester === "2026-2027-1" && r.maxSection === 4, r.semester + " / " + r.maxSection);
+  check('xls解析 保留来源格子', !!gao && gao._srcs && gao._srcs.length === 2 && gao._srcs[0].week === 1,
+    gao && JSON.stringify(gao._srcs));
+  check('xls解析 周块定位', r.dayWeekCol && r.dayWeekCol['1_1'] === 1 && r.weekSectionRow && r.weekSectionRow['1_1'] === 4,
+    JSON.stringify({ dayCol: r.dayWeekCol && r.dayWeekCol['1_1'], row: r.weekSectionRow && r.weekSectionRow['1_1'] }));
+  check('xls解析 节次分块', JSON.stringify(api.xlsSectionChunks([1,2,3])) === JSON.stringify([[1,2],[3,3]]),
+    JSON.stringify(api.xlsSectionChunks([1,2,3])));
   const sch = api.buildSchedule(r.courses, r.maxSection, null);
   check('xls解析 生成课表设置', sch.totalWeek === 2 && sch.morningNum === 4 && sch.afternoonNum === 0,
     JSON.stringify({ tw: sch.totalWeek, m: sch.morningNum, a: sch.afternoonNum }));
@@ -275,6 +281,8 @@ check('jiaowuUrl 登录页', api.jiaowuUrl('login') === 'https://jxgl.myschool.e
   const rs = (g.innerHTML.match(/rowspan="2"/g) || []).length;
   check('网格 同格多课只渲染一次', cards === 3, '渲染出 ' + cards + ' 张卡（期望 3）');
   check('网格 多课格与单课格都纵向合并', rs === 2, 'rowspan="2" 出现 ' + rs + ' 次（期望 2）');
+  check('网格 课程色块铺满单元格', /\.cellstack\.abs\{position:absolute/.test(html) && /fitCourseCards\(\)/.test(inline));
+  check('夜间模式 独立入口与输入框配色', /id="btnTheme"/.test(html) && /data-theme="dark"/.test(html) && /input:not\(\[type="checkbox"\]\)/.test(html));
 }
 
 // 15. 移动端重排：桌面完全不触发；手机上优先展示表格上传
