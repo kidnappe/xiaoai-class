@@ -238,7 +238,7 @@ html[data-narrow="1"] .wrap{padding-left:8px;padding-right:8px}
 <header>
   <a class="repo" href="https://github.com/kidnappe/xiaoai-class" target="_blank" rel="noopener"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>项目源码仓库</a>
   <h1>小爱课表导入器</h1>
-  <span class="tag"><b id="feVersion">v1.5.4</b></span>
+  <span class="tag"><b id="feVersion">v1.5.5</b></span>
   <button id="btnTheme" class="themeBtn" type="button" aria-label="切换夜间模式"></button>
 </header>
 
@@ -381,6 +381,7 @@ html[data-narrow="1"] .wrap{padding-left:8px;padding-right:8px}
   <div class="msg" id="importMsg"></div>
   <div class="btns" id="previewTools" style="margin:10px 0 2px">
     <button id="btnExportXls" disabled><span class="ico" data-icon="download-one"></span>导出课表 (.xls)</button>
+    <button id="btnExportJson" disabled><span class="ico" data-icon="code"></span>导出课表 (.json)</button>
   </div>
   <div id="grid"></div>
 </div>
@@ -400,6 +401,7 @@ html[data-narrow="1"] .wrap{padding-left:8px;padding-right:8px}
 </div>
 
 <script src="vendor/xlsx.full.min.js"></script>
+<script src="htu-schedule.js"></script>
 <script>
 "use strict";
 // IconPark（Apache-2.0）内联图标，由 iconpark-inline/gen.py 生成
@@ -641,6 +643,7 @@ async function doParse(){
   const m = $("importMsg"); m.className = "msg";
   $("errlist").textContent = ""; $("grid").innerHTML = ""; $("stats").textContent = "";
   $("btnExportXls").disabled = true;
+  $("btnExportJson").disabled = true;
   const text = $("jsonInput").value;
   const pending = pendingXlsSource;
   pendingXlsSource = null;
@@ -672,11 +675,15 @@ async function doParse(){
   }catch(e){ msg(m, e.message, false); $("btnImport").disabled = true; }
 }
 function syncExportButton(){
+  const hasCourses = !!(state.courses && state.courses.length);
   const btn = $("btnExportXls");
-  if(!btn) return;
-  const ext = state.xlsSource ? ((state.xlsSource.bookType === "xlsx") ? "xlsx" : "xls") : "xls";
-  btn.innerHTML = ipIcon("download-one") + (state.xlsSource ? ("导出原表 (." + ext + ")") : "导出课表 (.xls)");
-  btn.disabled = !(state.courses && state.courses.length);
+  if(btn){
+    const ext = state.xlsSource ? ((state.xlsSource.bookType === "xlsx") ? "xlsx" : "xls") : "xls";
+    btn.innerHTML = ipIcon("download-one") + (state.xlsSource ? ("导出原表 (." + ext + ")") : "导出课表 (.xls)");
+    btn.disabled = !hasCourses;
+  }
+  const jbtn = $("btnExportJson");
+  if(jbtn) jbtn.disabled = !hasCourses;
 }
 
 function renderGrid(courses){
@@ -1109,6 +1116,72 @@ function exportPreviewXls(){
   downloadXlsData(out, "课程表_" + d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0") + ".xls");
 }
 
+function buildPreviewJson(){
+  const rawSched = ($("schedPanel") && !$("schedPanel").classList.contains("hidden"))
+    ? collectSchedule() : (state.schedule || {});
+  const schedule = {};
+  ["morningNum", "afternoonNum", "nightNum", "totalWeek"].forEach(k => {
+    if(rawSched[k] != null && rawSched[k] !== "") schedule[k] = Number(rawSched[k]);
+  });
+  if(rawSched.sections && rawSched.sections.length){
+    schedule.sections = rawSched.sections.map((s, i) => ({
+      index: s.i != null ? Number(s.i) : i + 1,
+      start: s.s || "",
+      end: s.e || ""
+    }));
+  }
+
+  const ext = (typeof window !== "undefined" && window.HTU_SCHEDULE) || null;
+  const school = (ext && ext.HTU_SCHOOL) || HTU_SCHOOL;
+  const meta = (ext && ext.SCHEDULE_META) || null;
+  const switches = (ext && ext.SWITCHES_2026) || null;
+  function schoolSchedule(kind){
+    const info = (meta && meta[kind]) || {};
+    const summer = kind === "summer";
+    return {
+      name: info.label || (summer ? "夏季作息时间（夏令时）" : "秋季作息时间（冬令时）"),
+      effective2026: switches && switches[kind] ? switches[kind].effective : null,
+      officeHours: info.adminOffice || [],
+      sections: (school[kind] || []).map((p, i) => ({
+        index: i + 1, start: p[0], end: p[1]
+      }))
+    };
+  }
+
+  return {
+    school: school.name,
+    campus: school.campus || null,
+    exportedAt: new Date().toISOString(),
+    schedule: Object.keys(schedule).length ? schedule : null,
+    schoolSchedules: {
+      summer: schoolSchedule("summer"),
+      winter: schoolSchedule("winter")
+    },
+    courses: state.courses.map(c => ({
+      name: c.name || "",
+      teacher: c.teacher || "",
+      position: c.position || "",
+      day: Number(c.day) || 0,
+      sections: c.sections || "",
+      weeks: c.weeks || "",
+      weeksText: c.weeksText || ""
+    }))
+  };
+}
+
+function exportPreviewJson(){
+  const courses = state.courses || [];
+  if(!courses.length){ alert("还没有解析出课程，请先「解析预览」。"); return; }
+  const data = buildPreviewJson();
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:"application/json"});
+  const d = new Date();
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "课程表_" + d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0") + ".json";
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
 // ---- 导入前冲突校验：同 星期 + 节次有交集 + 周次有交集 → 小爱会判 601，先在预览里高亮闪烁 ----
 function _weekSet(c){
   const exp = expandWeekInput(c.weeks);
@@ -1158,7 +1231,7 @@ const DEFAULT_TIMES = [
 ];
 
 // 河南师范大学（建设路校区）官方作息表：仅当数据来源为河南师大教务系统时提供一键套用
-const HTU_SCHOOL = {
+const HTU_SCHOOL = (typeof window !== "undefined" && window.HTU_SCHEDULE && window.HTU_SCHEDULE.HTU_SCHOOL) || {
   name: "河南师范大学",
   summer: [["08:00","08:45"],["08:55","09:40"],["10:10","10:55"],["11:05","11:50"],
            ["15:00","15:45"],["15:55","16:40"],["17:10","17:55"],["18:05","18:50"],
@@ -1466,6 +1539,7 @@ $("btnLoadCourses").onclick = loadCourses;
 $("btnClear").onclick = clearTable;
 $("btnExport").onclick = exportJson;
 $("btnExportXls").onclick = exportPreviewXls;
+$("btnExportJson").onclick = exportPreviewJson;
 $("tableSel").onchange = e=>{ state.ctId = e.target.value; };
 
 // ----- 乘方教务书签 / 脚本分发（通用版：用户自行填写教务系统地址）-----

@@ -1,10 +1,12 @@
 // 前端 & 提取脚本逻辑测试（无浏览器环境模拟）
 import fs from 'fs';
 import path from 'path';
+import { createRequire } from 'module';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(__dirname, '..');
+const require = createRequire(import.meta.url);
 
 let pass = 0, failn = 0;
 function check(name, cond, detail) {
@@ -46,6 +48,7 @@ global.document = {
 };
 global.NodeFilter = { SHOW_TEXT: 4 };
 global.localStorage = { getItem() { return null; }, setItem() {} };
+global.HTU_SCHEDULE = require(path.join(root, 'htu-schedule.js'));
 global.fetch = async (url, opt) => {
   // 模拟教务接口：返回乘方 getCalendarWeekDatas 格式
   if (String(url).includes('getCalendarWeekDatas')) {
@@ -75,7 +78,7 @@ const inline = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].pop()[1];
 const sandbox = {};
 const fn = new Function('window', 'document', 'location', 'navigator', 'localStorage', 'fetch', 'setInterval', 'NodeFilter',
   inline + `
-  return { parseJcdm, cfRowsToCourses, normalizeWeeks, compressWeekNums, mergeWeekCourses, localParseSchedule, buildSchedule, jiaowuUrl, makeBookmarklet, isHtuHost, expandWeekInput, findConflicts, detectSeason, parseTimetableGrid, renderGrid, isMobileDevice, applyMobileLayout, guardWideLayout, xlsSectionChunks };`);
+  return { parseJcdm, cfRowsToCourses, normalizeWeeks, compressWeekNums, mergeWeekCourses, localParseSchedule, buildSchedule, jiaowuUrl, makeBookmarklet, isHtuHost, expandWeekInput, findConflicts, detectSeason, parseTimetableGrid, renderGrid, isMobileDevice, applyMobileLayout, guardWideLayout, xlsSectionChunks, buildPreviewJson };`);
 const api = fn(global.window, global.document, global.location, global.navigator, global.localStorage, global.fetch, () => 0, global.NodeFilter);
 
 // 1. 节次代码解析（乘方教务三种格式）
@@ -222,6 +225,21 @@ check('jiaowuUrl 登录页', api.jiaowuUrl('login') === 'https://jxgl.myschool.e
   check('detectSeason 识别夏季', api.detectSeason(toSecs(summer)) === 'summer', api.detectSeason(toSecs(summer)));
   check('detectSeason 识别冬季', api.detectSeason(toSecs(winter)) === 'winter', api.detectSeason(toSecs(winter)));
   check('detectSeason 不匹配返回空', api.detectSeason([{i:1,s:'07:00',e:'07:45'}]) === '');
+}
+
+// 11.5 预览 JSON 导出：课程、课表设置和两套官方作息放在同一个文件里
+{
+  const out = api.buildPreviewJson();
+  check('JSON导出 按钮与XLS同排', /id="btnExportXls"[^>]*>[\s\S]*?id="btnExportJson"/.test(html));
+  check('JSON导出 接入独立作息文件', /<script src="htu-schedule\.js"><\/script>/.test(html));
+  check('JSON导出 含两套作息', out.schoolSchedules.summer.sections.length === 10 &&
+    out.schoolSchedules.winter.sections.length === 10,
+    JSON.stringify({ s: out.schoolSchedules.summer.sections.length, w: out.schoolSchedules.winter.sections.length }));
+  check('JSON导出 含2026切换日期', out.schoolSchedules.summer.effective2026 === '2026-05-06' &&
+    out.schoolSchedules.winter.effective2026 === '2026-10-08',
+    JSON.stringify({ s: out.schoolSchedules.summer.effective2026, w: out.schoolSchedules.winter.effective2026 }));
+  check('JSON导出 不改内部字段', Object.keys(out).join(',') === 'school,campus,exportedAt,schedule,schoolSchedules,courses',
+    Object.keys(out).join(','));
 }
 
 // 12. 教务导出的 .xls 网格 → 标准课程（合成网格，不含真实个人信息）
