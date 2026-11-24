@@ -66,8 +66,15 @@ button.importbig:disabled{opacity:.4;box-shadow:none;filter:none;cursor:not-allo
 .importbar .grow{flex:1 1 auto}
 .chk{font-size:13px;color:var(--sub);display:flex;align-items:center;gap:6px;user-select:none}
 .msg{font-size:13px;margin-top:10px;padding:9px 12px;border-radius:9px;display:none}
-.msg.ok{display:block;color:var(--ok);background:rgba(31,169,103,.09)}
-.msg.err{display:block;color:var(--err);background:rgba(229,72,77,.09)}
+.msg.ok{display:flex;align-items:flex-start;gap:7px;color:var(--ok);background:rgba(31,169,103,.09)}
+.msg.err{display:flex;align-items:flex-start;gap:7px;color:var(--err);background:rgba(229,72,77,.09)}
+.msg.ok::before,.msg.err::before{content:"";flex:0 0 auto;width:15px;height:15px;margin-top:1px;background:currentColor;
+  -webkit-mask:var(--msg-ico) center/contain no-repeat;mask:var(--msg-ico) center/contain no-repeat}
+.msg.ok{--msg-ico:var(--ip-success)}
+.msg.err{--msg-ico:var(--ip-error)}
+.ip{display:inline-block;width:1em;height:1em;flex:0 0 auto;vertical-align:-.14em;margin-right:.4em}
+.ico{display:inline-flex;align-items:center;margin-right:6px;vertical-align:-.12em}
+.ico .ip{margin:0}
 .tblbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 select{padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--card);min-width:220px}
 #stats{font-size:13px;color:var(--sub);margin-top:12px}
@@ -79,6 +86,7 @@ table.grid td{height:46px}
  .cc{margin:2px;border-radius:7px;padding:4px 6px;text-align:left;overflow:hidden;cursor:pointer;position:relative}
  .cc:hover{outline:2px solid var(--accent,#1677ff);outline-offset:-2px}
   .cc .edit-hint{position:absolute;right:4px;top:2px;font-size:10px;opacity:.55}
+  .edit-hint .ip{width:12px;height:12px;margin:0}
   .cc.conflict{outline:3px solid var(--err);outline-offset:-3px;z-index:2;animation:ccblink .7s ease-in-out infinite}
   @keyframes ccblink{0%,100%{box-shadow:0 0 0 0 rgba(229,72,77,0);filter:saturate(1)}50%{box-shadow:0 0 0 4px rgba(229,72,77,.55);filter:saturate(1.6) brightness(1.1)}}
   .conflict-alert{display:inline-flex;align-items:center;gap:6px;margin-top:8px;padding:9px 14px;border-radius:10px;background:rgba(229,72,77,.16);color:var(--err);font-weight:800;font-size:14px;border:1.5px solid var(--err);animation:alertblink 1s ease-in-out infinite}
@@ -97,7 +105,7 @@ table.rows tr:hover td{background:var(--bg)}
 footer{text-align:center;font-size:12px;color:var(--sub);margin-top:26px}
 .hidden{display:none}
 code{background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:0 4px;font-size:12px}
-/* ---------- 📎 文件选择标签（新增组件，不影响任何现有规则） ----------
+/* ---------- 文件选择标签（新增组件，不影响任何现有规则） ----------
    为什么这么写：移动端浏览器普遍要求文件选择由用户手势【直接命中】控件才允许弹出；
    “普通按钮 onclick 里调隐藏 input.click()”在不少移动内核上没反应。
    改用 label[for] 后由浏览器原生转发点击，不需要 JS，也不会因为脚本误触发。 */
@@ -142,7 +150,7 @@ code{background:var(--bg);border:1px solid var(--line);border-radius:4px;padding
   textarea{min-height:110px}
   #credPaste{min-height:64px}
 
-  /* ★ 课表预览（重点）：手机上一律铺满整屏宽度、7 天全部可见，不再横向滚动。
+  /* 课表预览（重点）：手机上一律铺满整屏宽度、7 天全部可见，不再横向滚动。
      思路：把 #grid 拉出卡片内边距（负边距 full-bleed）拿到最大宽度，
      再把节次列压到 22px、去掉表格固定最小宽度，7 个星期各约 49px，
      靠换行把信息完整展示（不截断、不用滑）。 */
@@ -204,14 +212,12 @@ html[data-narrow="1"] .wrap{padding-left:8px;padding-right:8px}
 <header>
   <a class="repo" href="https://github.com/kidnappe/xiaoai-class" target="_blank" rel="noopener"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>项目源码仓库</a>
   <h1>小爱课表导入器</h1>
-  <span class="tag"><b id="feVersion" title="前端版本">v1.5.2</b> <b>·乘方教务版</b></span>
-  <div id="visitCounter" style="font-size:12px;color:var(--sub);margin-top:6px"></div>
+  <span class="tag"><b id="feVersion">v1.5.3</b></span>
 </header>
 
 <div class="card" id="cardCred">
   <h2><span class="dot" id="dot"></span>1 · 连接小爱</h2>
-  <p class="hint">打开小爱同学 App 的「课程表」H5 页面，复制 Debug JSON 整段粘贴到下面（自动提取凭据），或直接手动填写三项。凭据只保存在你本机。</p>
-  <textarea id="credPaste" placeholder="把包含 appId / serviceToken / deviceId 的 Debug JSON 整段粘贴到这里，自动识别…"></textarea>
+  <textarea id="credPaste" placeholder="粘贴小爱课表 H5 的 Debug JSON"></textarea>
   <div class="row3">
     <label>appId<input id="appId" autocomplete="off"></label>
     <label>serviceToken<input id="serviceToken" autocomplete="off"></label>
@@ -224,50 +230,39 @@ html[data-narrow="1"] .wrap{padding-left:8px;padding-right:8px}
 </div>
 
 <div class="card" id="cardJiaowu">
-  <h2>📥 2 · 提取课表 <span class="tag" style="margin-left:8px;background:var(--bg);border:1px solid var(--line);color:var(--sub);padding:1px 8px;font-size:11px">乘方教务</span></h2>
-  <p class="hint" id="cardJiaowuHint">登录你学校的乘方教务系统后，用<strong>提取书签</strong>（推荐，零安装）在教务页面点一下即可逐周扫描整学期课表、自动合并成标准 JSON 并复制到剪贴板。</p>
+  <h2><span class="ico" data-icon="calendar"></span>2 · 提取课表</h2>
 
   <div style="margin-bottom:10px">
-    <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:6px">🏫 你的教务系统地址</div>
-    <input id="jwHostInput" placeholder="例如：jwc.htu.edu.cn" autocomplete="off"
+    <label for="jwHostInput" style="display:block;font-size:14px;font-weight:700;color:var(--text);margin-bottom:6px"><span class="ico" data-icon="school"></span>教务系统地址</label>
+    <input id="jwHostInput" placeholder="学校教务域名" autocomplete="off"
            style="width:100%;box-sizing:border-box;padding:12px 14px;border:2px solid var(--accent);border-radius:10px;background:var(--card);font-size:16px;font-weight:600;color:var(--text)">
   </div>
   <div class="btns" style="margin-bottom:14px">
-    <a class="link" id="linkLogin" target="_blank" rel="noopener">🔑 打开登录页</a>
-    <a class="link" id="linkKb" target="_blank" rel="noopener">📖 个人课表</a>
+    <a class="link" id="linkLogin" target="_blank" rel="noopener"><span class="ico" data-icon="key"></span>打开登录页</a>
+    <a class="link" id="linkKb" target="_blank" rel="noopener"><span class="ico" data-icon="calendar"></span>个人课表</a>
   </div>
 
   <!-- 方案一：书签提取（主推：零安装、每次自动拉最新脚本）-->
   <div id="bookmarkBox" style="border:2px solid var(--accent);border-radius:10px;padding:16px 18px;background:rgba(79,110,247,.04)">
     <div class="opt-hd" style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-      <span style="font-size:15px;font-weight:700">🥇 书签提取（推荐）</span>
-      <span class="badge" style="background:var(--accent);color:#fff;border-color:var(--accent)">零安装 · 每次自动最新</span>
+      <span style="font-size:15px;font-weight:700"><span class="ico" data-icon="bookmark-one"></span>书签提取</span>
     </div>
-    <p class="hint" style="margin-bottom:12px"><strong>怎么用</strong>：点下面按钮复制书签 → 存进浏览器书签栏（在书签栏空白处右键「添加网页」，网址框里粘贴）→ 登录教务并选好学期 → 点这个书签 → 点页面右下角的「📚 提取课表」→ 回本页粘贴导入。首次只需存一次，之后每次点击都自动用最新版脚本。</p>
     <div class="btns" style="margin:0">
-      <button class="primary" id="btnCopyBookmarklet">📚 复制提取书签，粘贴到书签栏</button>
-      <a class="link" id="linkJsSource" target="_blank" rel="noopener">⬇ 看脚本源码</a>
+      <button class="primary" id="btnCopyBookmarklet"><span class="ico" data-icon="bookmark-one"></span>复制提取书签</button>
+      <a class="link" id="linkJsSource" target="_blank" rel="noopener"><span class="ico" data-icon="code"></span>源码</a>
     </div>
     <details style="margin-top:10px">
-      <summary style="font-size:13px;color:var(--accent);cursor:pointer">分步详解（存 3 步 · 用 4 步）与三点注意</summary>
-      <div style="font-size:13px;font-weight:600;margin:10px 0 2px">第一次：把书签存进书签栏（只需一次）</div>
-      <ol style="line-height:1.9;font-size:13px;padding-left:20px;margin:4px 0 0">
-        <li>点上方「📚 复制提取书签」</li>
-        <li>让浏览器显示书签栏：按 <strong>Ctrl+Shift+B</strong>（Chrome / Edge）</li>
-        <li>在书签栏空白处右键 →「添加网页」，标题填「提取课表」，<strong>网址框里 Ctrl+V 粘贴</strong> → 保存</li>
+      <summary style="font-size:13px;color:var(--accent);cursor:pointer">使用步骤与注意事项</summary>
+      <ol style="line-height:1.9;font-size:13px;padding-left:20px;margin:10px 0 0">
+        <li>点「复制提取书签」，按 <strong>Ctrl+Shift+B</strong> 显示书签栏。</li>
+        <li>书签栏右键「添加网页」，标题填「提取课表」，网址框粘贴后保存。</li>
+        <li>在教务「个人课表」选好学期，点书签，再点右下角「提取课表」。</li>
+        <li>回本页，点「从剪贴板粘贴」。</li>
       </ol>
-      <div style="font-size:13px;font-weight:600;margin:10px 0 2px">以后每学期：点书签提取</div>
-      <ol style="line-height:1.9;font-size:13px;padding-left:20px;margin:4px 0 0">
-        <li>登录教务系统进入「📖 个人课表」，<strong>先在页面上的学期下拉框里选中要提取的那个学期</strong>（这一步决定提取哪个学期，不能省）</li>
-        <li>点一下书签栏的「提取课表」—— 它<strong>不直接出结果</strong>，而是把「📚 提取课表」按钮装到页面右下角</li>
-        <li>点右下角那个按钮，等浮窗显示「✅ 已复制 N 条课表」，JSON 已经进了剪贴板</li>
-        <li>回本页「4 · 粘贴课程 JSON 并导入」，点「📋 从剪贴板粘贴」</li>
-      </ol>
-      <div style="font-size:13px;font-weight:600;margin:10px 0 2px">三点注意</div>
-      <ul style="line-height:1.8;font-size:13px;padding-left:20px;margin:4px 0 0">
-        <li><strong>书签依赖后端在线</strong>：它只是「去取脚本」的入口。本地用要保持 <code>启动导入器.bat</code> 开着；点了没反应，先重启服务、或回本页重新复制一次书签。排错：F12 → 网络 → 看有没有一条 <code>api/jiaowu_extractor.js</code> 请求。</li>
-        <li><strong>后端地址在「点复制」那一刻固化进书签</strong>：之后换了后端（比如改用 <code>?api=</code> 指向线上地址）要重新复制并覆盖旧书签。</li>
-        <li><strong>必须用 http 打开本页</strong>：直接双击 <code>index.html</code>（<code>file://</code>）生成的书签地址是坏的。</li>
+      <ul style="line-height:1.8;font-size:13px;padding-left:20px;margin:10px 0 0">
+        <li>书签需要本页服务在线；点了没反应就重启服务或重新复制书签。</li>
+        <li>换过后端地址后，需要重新复制并覆盖旧书签。</li>
+        <li>本页必须用 http 打开，<code>file://</code> 生成的书签不可用。</li>
       </ul>
     </details>
   </div>
@@ -275,21 +270,19 @@ html[data-narrow="1"] .wrap{padding-left:8px;padding-right:8px}
   <!-- 方案二：油猴脚本（备选：一次安装、常驻按钮）-->
   <div id="userscriptBox" style="border:1px solid var(--line);border-radius:10px;padding:14px 18px;margin-top:12px">
     <div class="opt-hd" style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-      <span style="font-size:14px;font-weight:600">🥈 油猴脚本（一次安装，按钮常驻）</span>
-      <span class="badge">长期常用可选</span>
+      <span style="font-size:14px;font-weight:600"><span class="ico" data-icon="monkey"></span>油猴脚本</span>
     </div>
-    <p class="hint" style="margin-bottom:12px">需先装浏览器扩展 Tampermonkey。装好后教务页面右下角会出现「📚 提取课表」按钮，不用每次点书签。<strong>注意：油猴脚本不会自动更新</strong>，日后要用新功能得回本页重新覆盖粘贴一次。</p>
+    <p class="hint" style="margin-bottom:12px">脚本不会自动更新。</p>
     <div class="btns" style="margin:0">
-      <button id="btnCopyUserscript">📋 复制油猴脚本内容</button>
-      <a class="link" href="https://www.tampermonkey.net/" target="_blank" rel="noopener">没装？去装 Tampermonkey</a>
+      <button id="btnCopyUserscript"><span class="ico" data-icon="copy"></span>复制脚本</button>
+      <a class="link" href="https://www.tampermonkey.net/" target="_blank" rel="noopener"><span class="ico" data-icon="download-one"></span>安装 Tampermonkey</a>
     </div>
     <details style="margin-top:10px">
-      <summary style="font-size:13px;color:var(--accent);cursor:pointer">安装步骤（4 步）</summary>
+      <summary style="font-size:13px;color:var(--accent);cursor:pointer">安装步骤</summary>
       <ol style="line-height:1.9;font-size:13px;padding-left:20px;margin:8px 0 0">
-        <li>浏览器装好 Tampermonkey 扩展</li>
-        <li>点上方「📋 复制油猴脚本内容」</li>
-        <li>Tampermonkey 面板 →「添加新脚本」→ 编辑器里 Ctrl+A 全选 → Ctrl+V 粘贴 → <strong>Ctrl+S</strong> 保存</li>
-        <li>登录教务系统，任意页面右下角出现「📚 提取课表」→ 点它 → 等浮窗显示「✅ 已复制 N 条」</li>
+        <li>安装 Tampermonkey。</li>
+        <li>点「复制脚本」，在 Tampermonkey 新建脚本、粘贴并保存。</li>
+        <li>在教务页点右下角「提取课表」。</li>
       </ol>
     </details>
   </div>
@@ -298,50 +291,22 @@ html[data-narrow="1"] .wrap{padding-left:8px;padding-right:8px}
 
   <!-- 方案三：教务导出的课表表格上传（.xls / .xlsx）-->
   <details open id="xlsBox" style="margin-top:14px;border:1px solid var(--line);border-radius:10px;padding:12px 16px">
-    <summary style="font-size:13px;font-weight:600;color:var(--sub);cursor:pointer">📎 上传教务导出的课表表格（.xls / .xlsx）</summary>
-    <p class="hint" style="margin:10px 0 8px">你的教务系统如果能「导出课表为 Excel」（教务里通常在个人课表页顶部或右键菜单），可以直接选文件解析，<strong>不需要装扩展、不需要点书签</strong>，一次拿到整学期。表格结构不依赖任何接口字段，因此也不会出现星期偏移、节次认错这类问题。</p>
-    <div class="btns" style="margin:0">
+    <summary style="font-size:13px;font-weight:600;color:var(--sub);cursor:pointer"><span class="ico" data-icon="file-excel"></span>上传教务导出的课表表格</summary>
+    <div class="btns" style="margin:10px 0 8px">
       <input type="file" id="xlsFile" accept=".xls,.xlsx,.csv" class="pickfile">
-      <label for="xlsFile" class="btnlike primary">📎 选择教务导出的表格文件</label>
-      <span class="hint" style="margin:0;font-size:12px">手机端请用系统浏览器打开本页（微信内置浏览器常不弹文件选择）</span>
+      <label for="xlsFile" class="btnlike primary"><span class="ico" data-icon="upload-one"></span>选择表格文件</label>
+      <span class="hint" style="margin:0;font-size:12px">.xls / .xlsx / .csv</span>
     </div>
-    <p class="hint" style="margin:10px 0 0;color:var(--err)"><strong>⚠ 一个已知限制：</strong>教务导出的表格里只有「第一大节 / 第二大节」这种<strong>节次号</strong>，<strong>没有每节课的上下课时刻</strong>（那个只能从接口里的 <code>qssj/jssj</code> 或官方作息表拿）。所以解析后请务必在下方「课表设置」里点 <strong>☀ 夏令时 / ❄ 冬令时</strong>（识别到河南师大时会自动选中），或手填时间表，否则导入小爱后时间会不准。</p>
+    <p class="hint" style="margin:10px 0 0;color:var(--err)"><span class="ico" data-icon="attention"></span>表格不含上下课时刻；解析后请在「课表设置」补上作息。</p>
     <div class="msg" id="xlsMsg"></div>
   </details>
-  <div id="flowBox" style="margin-top:14px;padding:12px 14px;background:var(--bg);border-radius:8px;border:1px solid var(--line)">
-   <div id="flowDesktop">
-    <div style="font-size:13px;font-weight:600;color:var(--sub);margin-bottom:8px">📘 完整流程（书签版，5 步）</div>
-    <ol style="line-height:2.2;font-size:13px;padding-left:20px;margin:0">
-      <li><strong>存下提取书签</strong>：点「📚 复制提取书签」→ 按 <code>Ctrl+Shift+B</code> 显示书签栏 → 书签栏右键「添加网页」→ 网址框粘贴 → 保存。（只需做一次）</li>
-      <li><strong>打开教务课表</strong>：输入框填学校地址（如 <code>jwc.htu.edu.cn</code>）→ 点「🔑 打开登录页」登录 → 进入「📖 个人课表」→ <strong>在学期下拉框选中目标学期</strong>。</li>
-      <li><strong>点书签</strong>：点一下书签栏的「提取课表」→ 页面右下角出现「📚 提取课表」按钮（书签只负责把按钮装上，不直接出结果）。</li>
-      <li><strong>点按钮提取</strong>：点右下角按钮 → 自动识别学期代码 + 逐周扫描全学期 + 合并单双周 → JSON 复制到剪贴板 → 页面显示绿色浮窗「✅ 已复制 N 条课表」。</li>
-      <li><strong>导入到小爱</strong>：回本页下方「<strong>4 · 粘贴课程 JSON 并导入</strong>」区 → 点「📋 从剪贴板粘贴」（或直接 Ctrl+V）自动填入并解析预览 → 在「<strong>3 · 选择目标课表</strong>」下拉选一个小爱已有课表或新建 → 可勾选「导入前清空」「同步课表设置」→ 点「🚀 导入到小爱」。</li>
-    </ol>
-    <p class="hint" style="margin:8px 0 0;line-height:1.6">学期从页面的学期下拉框读取，提取浮窗会写明「学期 X，来源 Y」便于核对；识别不到时（提取报错带学期码）可右键教务页面的「📚 提取课表」按钮 → 手动钉死学期代码（如 <code>202601</code> 代表 2026 秋季学期）。长期用更省事可改用下方「🥈 油猴脚本」，一次安装后按钮常驻。</p>
-   </div>
-   <div id="flowMobile" hidden>
-    <div style="font-size:13px;font-weight:600;color:var(--sub);margin-bottom:8px">📘 完整流程（手机版 · 表格上传，5 步）</div>
-    <ol style="line-height:2.2;font-size:13px;padding-left:20px;margin:0">
-      <li><strong>登录教务并找到导出入口</strong>：上面输入框填学校地址 → 点「 打开登录页」登录 → 进「 个人课表」，用页面上的「导出课表 / 导出 Excel」导出——<strong>手机浏览器里就能导出，不用回电脑</strong>。</li>
-      <li><strong>导出并保存</strong>：点导出后，手机会把 .xls 存进「下载」。</li>
-      <li><strong>回本页选文件</strong>：点上面的「 选择教务导出的表格文件」→ 选中刚下载的那个 .xls。</li>
-      <li><strong>核对预览</strong>：页面会自动生成星期 × 节次的彩色课表，核对星期、节次、周次是否与教务一致。</li>
-      <li><strong>套用作息后导入</strong>：表格里没有上下课时刻，所以在「课表设置」里点 <strong>☀ 夏令时 / ❄ 冬令时</strong>（识别到河南师大时会自动选中）→ 再点「🚀 导入到小爱」。</li>
-    </ol>
-    <p class="hint" style="margin:8px 0 0;line-height:1.6">手机上装不了油猴扩展、移动浏览器也不执行书签脚本，那两种方式请到电脑上用（已收进下面的折叠区）。</p>
-   </div>
-  <!-- 方案四：智能提取（兜底，折叠）-->
+  <!-- 方案四：手动粘贴解析（兜底，折叠）-->
   <details style="margin-top:14px;border:1px dashed var(--line);border-radius:10px;padding:12px 16px">
-    <summary style="font-size:13px;font-weight:600;color:var(--sub);cursor:pointer">🤖 智能提取（油猴/书签都用不了时的兜底）</summary>
-    <p class="hint" style="margin:10px 0 8px">支持三种粘贴内容，点「智能提取」自动识别：<br>
-      ① 教务接口 JSON 原文（F12→网络→<code>getCalendarWeekDatas</code>→响应，整段复制）<br>
-      ② 课表页面文字：<strong>Ctrl+A</strong> 全选 → <strong>Ctrl+C</strong> 复制 → 粘贴<br>
-      ③ 手打一行一门课：<code>周一 第1-2节 高等数学 张三 教1-101 1-16周(单)</code></p>
+    <summary style="font-size:13px;font-weight:600;color:var(--sub);cursor:pointer"><span class="ico" data-icon="robot"></span>手动粘贴解析</summary>
     <textarea id="aiPasteInput" style="min-height:110px;font-family:Consolas,monospace;font-size:13px;width:100%;box-sizing:border-box;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--card);resize:vertical"
-      placeholder="粘贴教务接口 JSON / 课表页面文字到此处…"></textarea>
+      placeholder="粘贴课表 JSON、页面文字，或一行一门课"></textarea>
     <div class="btns" style="margin-top:8px">
-      <button id="btnAiParse">🤖 智能提取</button>
+      <button id="btnAiParse"><span class="ico" data-icon="robot"></span>解析</button>
       <button id="btnAiClear">清空</button>
     </div>
     <div class="msg" id="aiMsg"></div>
@@ -351,32 +316,27 @@ html[data-narrow="1"] .wrap{padding-left:8px;padding-right:8px}
 
 <div class="card hidden" id="cardTable">
   <h2>3 · 选择目标课表</h2>
-  <p class="hint">课程将写入选中的课表；也可以新建一个（例如「2026 春」），导入后再去小爱 App 里切换。</p>
   <div class="tblbar">
     <select id="tableSel"></select>
     <button id="btnNewTable">＋ 新建课表</button>
-    <span class="hint" id="tableInfo" style="margin:0"></span>
   </div>
   <div class="msg" id="tableMsg"></div>
 </div>
 
-<div class="card hidden" id="cardImport">
-  <h2>4 · 粘贴课程 JSON 并导入</h2>
-  <p class="hint">标准格式：<code>[{"name":"高等数学","teacher":"张三","position":"A101","day":1,"sections":"1,2","weeks":"1-16周(单)"}]</code> —— 字段名宽松兼容（courseName/老师/教室/星期 都认），周次支持 <code>1-16周(单)</code>、<code>1至16</code> 等写法。乘方提取脚本输出的 <code>{"courses":[...],"schedule":{...}}</code> 整体粘贴也认。</p>
+<div class="card" id="cardImport">
+  <h2>4 · 课程预览与导入</h2>
   <textarea id="jsonInput" style="min-height:180px;font-family:Consolas,monospace;font-size:13px"
-    placeholder='[{"name":"高等数学(下)","teacher":"张三","position":"教1-101","day":1,"sections":"1,2","weeks":"1-16周"},
- {"name":"大学英语","teacher":"李四","position":"外语楼302","day":2,"sections":"3,4","weeks":"1-16周(单)"}]'></textarea>
+    placeholder="粘贴课程 JSON"></textarea>
   <div class="btns">
-    <button id="btnClipFill">📋 从剪贴板粘贴</button>
+    <button id="btnClipFill"><span class="ico" data-icon="clipboard"></span>从剪贴板粘贴</button>
     <button class="ok" id="btnParse">解析预览</button>
     <button id="btnSample">填入示例</button>
-    <button id="btnClearInput" title="只清空上面这个输入框，不影响已解析出的课程预览">🗑 清空输入</button>
+    <button id="btnClearInput"><span class="ico" data-icon="delete"></span>清空输入</button>
   </div>
   <div id="stats"></div>
   <div class="errlist" id="errlist"></div>
   <div id="schedPanel" class="hidden">
-    <h2 style="font-size:15px;margin:14px 0 4px">课表设置（节数 / 时间表）</h2>
-    <p class="hint">来自教务系统的课表设置，导入时一并同步到小爱（合并到现有 setting，不清空背景等）。节数和时间可手动修改。</p>
+    <h2 style="font-size:15px;margin:14px 0 4px">课表设置</h2>
     <div class="row3">
       <label>上午节数<input id="numMorning" type="number" min="0" max="12"></label>
       <label>下午节数<input id="numAfternoon" type="number" min="0" max="12"></label>
@@ -386,18 +346,20 @@ html[data-narrow="1"] .wrap{padding-left:8px;padding-right:8px}
     <div id="schedTimes" style="margin-top:10px"></div>
   </div>
   <div class="importbar hidden" id="importBar">
-    <button class="importbig" id="btnImport" disabled>🚀 导入到小爱 →</button>
+    <button class="importbig" id="btnImport" disabled><span class="ico" data-icon="upload-one"></span>导入到小爱</button>
     <div class="grow"></div>
-    <label class="chk"><input type="checkbox" id="syncSettings" checked>导入时同步课表设置（节数/时间表）</label>
-    <label class="chk"><input type="checkbox" id="clearFirst">导入前清空该课表现有课程</label>
+    <label class="chk"><input type="checkbox" id="syncSettings" checked>同步课表设置</label>
+    <label class="chk"><input type="checkbox" id="clearFirst">先清空该课表</label>
   </div>
   <div class="msg" id="importMsg"></div>
+  <div class="btns" id="previewTools" style="margin:10px 0 2px">
+    <button id="btnExportXls" disabled><span class="ico" data-icon="download-one"></span>导出课表 (.xls)</button>
+  </div>
   <div id="grid"></div>
 </div>
 
 <div class="card hidden" id="cardManage">
   <h2>5 · 管理课表</h2>
-  <p class="hint">查看当前课表已有课程、单条删除、全部清空，或导出为标准 JSON 备份/迁移。</p>
   <div class="btns">
     <button id="btnLoadCourses">查看该课表课程</button>
     <button id="btnExport">导出为 JSON</button>
@@ -407,13 +369,63 @@ html[data-narrow="1"] .wrap{padding-left:8px;padding-right:8px}
   <div class="msg" id="manageMsg"></div>
 </div>
 
-<footer>接口协议适配小爱课程表 Web 端 · 教务适配乘方科技系统 · 数据只经过你的电脑和小爱服务器</footer>
+<footer>数据只经过你的电脑和小爱服务器</footer>
 </div>
 
 <script src="vendor/xlsx.full.min.js"></script>
 <script>
 "use strict";
+// IconPark（Apache-2.0）内联图标，由 iconpark-inline/gen.py 生成
+var IP_ICONS = {
+  'calendar': { v: '0 0 48 48', d: '<path d="M5 19H43V40C43 41.1046 42.1046 42 41 42H7C5.89543 42 5 41.1046 5 40V19Z" fill="none"/><path d="M5 9C5 7.89543 5.89543 7 7 7H41C42.1046 7 43 7.89543 43 9V19H5V9Z"/><path d="M16 4V12"/><path d="M32 4V12"/><path d="M28 34H34"/><path d="M14 34H20"/><path d="M28 26H34"/><path d="M14 26H20"/>' },
+  'school': { v: '0 0 48 48', d: '<path d="M4 33C4 31.8954 4.89543 31 6 31H12V24L24 16L36 24V31H42C43.1046 31 44 31.8954 44 33V42C44 43.1046 43.1046 44 42 44H4V33Z" fill="none"/><path d="M24 6V16"/><path d="M36 11.9998V5.99984C36 5.99984 34.5 8.99984 30 5.99984C25.5 2.99984 24 5.99984 24 5.99984V11.9998C24 11.9998 25.5 8.99984 30 11.9998C34.5 14.9998 36 11.9998 36 11.9998Z"/><path d="M28 44V31H20L20 44"/><path d="M18 44L30 44"/>' },
+  'key': { v: '0 0 48 48', d: '<path d="M22.8682 24.2982C25.4105 26.7935 26.4138 30.4526 25.4971 33.8863C24.5805 37.32 21.8844 40.0019 18.4325 40.9137C14.9806 41.8256 11.3022 40.8276 8.79375 38.2986C5.02208 34.4141 5.07602 28.2394 8.91499 24.4206C12.754 20.6019 18.9613 20.5482 22.8664 24.3L22.8682 24.2982Z" fill="none"/><path d="M23 24L40 7"/><path d="M30.3052 16.9001L35.7337 22.3001L42.0671 16.0001L36.6385 10.6001L30.3052 16.9001Z" fill="none"/>' },
+  'bookmark-one': { v: '0 0 48 48', d: '<path d="M34 10V4H8V38L14 35"/><path d="M14 44V10H40V44L27 37.7273L14 44Z" fill="none"/>' },
+  'code': { v: '0 0 48 48', d: '<path d="M16 13L4 25.4322L16 37"/><path d="M32 13L44 25.4322L32 37"/><path d="M28 4L21 44"/>' },
+  'monkey': { v: '0 0 48 48', d: '<path d="M13.2 21C12.4312 19.531 12 17.8817 12 16.1389C12 9.98704 17.3726 5 24 5C30.6274 5 36 9.98704 36 16.1389C36 17.8817 35.5688 19.531 34.8 21"/><ellipse cx="24" cy="31" rx="15" ry="12" fill="none"/><path d="M30.5177 33.8742C26.8486 37.5433 20.7965 37.44 17 33.6435"/><path d="M12 23C8.68629 23 6 20.7614 6 18C6 15.2386 8.68629 13 12 13"/><path d="M36 23C39.3137 23 42 20.7614 42 18C42 15.2386 39.3137 13 36 13"/><circle cx="20" cy="14" r="2" fill="currentColor"/><circle cx="28" cy="14" r="2" fill="currentColor"/>' },
+  'copy': { v: '0 0 48 48', d: '<path d="M13 12.4316V7.8125C13 6.2592 14.2592 5 15.8125 5H40.1875C41.7408 5 43 6.2592 43 7.8125V32.1875C43 33.7408 41.7408 35 40.1875 35H35.5163"/><path d="M32.1875 13H7.8125C6.2592 13 5 14.2592 5 15.8125V40.1875C5 41.7408 6.2592 43 7.8125 43H32.1875C33.7408 43 35 41.7408 35 40.1875V15.8125C35 14.2592 33.7408 13 32.1875 13Z" fill="none"/>' },
+  'file-excel': { v: '0 0 48 48', d: '<path d="M10 4H30L40 14V42C40 43.1046 39.1046 44 38 44H10C8.89543 44 8 43.1046 8 42V6C8 4.89543 8.89543 4 10 4Z" fill="none"/><path d="M29 18H19V34H29"/><path d="M29 26H19"/>' },
+  'upload-one': { v: '0 0 48 48', d: '<path d="M11.6777 20.271C7.27476 21.3181 4 25.2766 4 30C4 35.5228 8.47715 40 14 40C14.9474 40 15.864 39.8683 16.7325 39.6221"/><path d="M36.0547 20.271C40.4577 21.3181 43.7324 25.2766 43.7324 30C43.7324 35.5228 39.2553 40 33.7324 40C32.785 40 31.8684 39.8683 30.9999 39.6221"/><path d="M36 20C36 13.3726 30.6274 8 24 8C17.3726 8 12 13.3726 12 20"/><path d="M17.0654 27.8812L23.9999 20.9238L31.1318 28.0002"/><path d="M24 38.0001V24.4619"/>' },
+  'attention': { v: '0 0 48 48', d: '<path d="M24 44C29.5228 44 34.5228 41.7614 38.1421 38.1421C41.7614 34.5228 44 29.5228 44 24C44 18.4772 41.7614 13.4772 38.1421 9.85786C34.5228 6.23858 29.5228 4 24 4C18.4772 4 13.4772 6.23858 9.85786 9.85786C6.23858 13.4772 4 18.4772 4 24C4 29.5228 6.23858 34.5228 9.85786 38.1421C13.4772 41.7614 18.4772 44 24 44Z" fill="none"/><path fill-rule="evenodd" clip-rule="evenodd" d="M24 37C25.3807 37 26.5 35.8807 26.5 34.5C26.5 33.1193 25.3807 32 24 32C22.6193 32 21.5 33.1193 21.5 34.5C21.5 35.8807 22.6193 37 24 37Z" fill="currentColor"/><path d="M24 12V28"/>' },
+  'robot': { v: '0 0 48 48', d: '<rect x="9" y="17" width="30" height="26" rx="2"/><path d="M33 9L28 17"/><path d="M15 9L20 17"/><circle cx="34" cy="7" r="2"/><circle cx="14" cy="7" r="2"/><rect x="16" y="24" width="16" height="8" rx="4" fill="none"/><path d="M9 24H4V34H9"/><path d="M39 24H44V34H39"/>' },
+  'clipboard': { v: '0 0 48 48', d: '<path d="M17 7H16H10C8.89543 7 8 7.89543 8 9L8 42C8 43.1046 8.89543 44 10 44H38C39.1046 44 40 43.1046 40 42V9C40 7.89543 39.1046 7 38 7H33.0499H31"/><rect x="17" y="4" width="14" height="6" fill="none"/>' },
+  'delete': { v: '0 0 48 48', d: '<path d="M9 10V44H39V10H9Z" fill="none"/><path d="M20 20V33"/><path d="M28 20V33"/><path d="M4 10H44"/><path d="M16 10L19.289 4H28.7771L32 10H16Z" fill="none"/>' },
+  'download-one': { v: '0 0 48 48', d: '<path d="M11.6777 20.271C7.27476 21.3181 4 25.2766 4 30C4 35.5228 8.47715 40 14 40C14.9474 40 15.864 39.8683 16.7325 39.6221"/><path d="M36.0547 20.271C40.4577 21.3181 43.7324 25.2766 43.7324 30C43.7324 35.5228 39.2553 40 33.7324 40C32.785 40 31.8684 39.8683 30.9999 39.6221"/><path d="M36 20C36 13.3726 30.6274 8 24 8C17.3726 8 12 13.3726 12 20"/><path d="M17.0654 30.119L23.9999 37.0764L31.1318 30"/><path d="M24 20V33.5382"/>' },
+  'close': { v: '0 0 48 48', d: '<path d="M8 8L40 40"/><path d="M8 40L40 8"/>' },
+  'edit': { v: '0 0 48 48', d: '<path d="M7 42H43"/><path d="M11 26.7199V34H18.3172L39 13.3081L31.6951 6L11 26.7199Z" fill="none"/>' },
+  'error': { v: '0 0 48 48', d: '<path fill-rule="evenodd" clip-rule="evenodd" d="M6 11L11 6L24 19L37 6L42 11L29 24L42 37L37 42L24 29L11 42L6 37L19 24L6 11Z" fill="none"/>' },
+  'success': { v: '0 0 48 48', d: '<path d="M24 4L29.2533 7.83204L35.7557 7.81966L37.7533 14.0077L43.0211 17.8197L41 24L43.0211 30.1803L37.7533 33.9923L35.7557 40.1803L29.2533 40.168L24 44L18.7467 40.168L12.2443 40.1803L10.2467 33.9923L4.97887 30.1803L7 24L4.97887 17.8197L10.2467 14.0077L12.2443 7.81966L18.7467 7.83204L24 4Z" fill="none"/><path d="M17 24L22 29L32 19"/>' },
+  'arrow-up': { v: '0 0 48 48', d: '<path d="M24 6V42"/><path d="M12 18L24 6L36 18"/>' },
+  'arrow-down': { v: '0 0 48 48', d: '<path d="M24 42V6"/><path d="M36 30L24 42L12 30"/>' },
+  'sunny': { v: '0 0 48 48', d: '<path d="M30.7826 24.5652C34.5285 24.5652 37.5652 21.5285 37.5652 17.7826C37.5652 14.0367 34.5285 11 30.7826 11C27.4338 11 24.6518 13.427 24.0996 16.618"/><path d="M33 7C34.1046 7 35 6.10457 35 5C35 3.89543 34.1046 3 33 3C31.8954 3 31 3.89543 31 5C31 6.10457 31.8954 7 33 7Z" fill="currentColor"/><path d="M42 12C43.1046 12 44 11.1046 44 10C44 8.89543 43.1046 8 42 8C40.8954 8 40 8.89543 40 10C40 11.1046 40.8954 12 42 12Z" fill="currentColor"/><path d="M44 21C45.1046 21 46 20.1046 46 19C46 17.8954 45.1046 17 44 17C42.8954 17 42 17.8954 42 19C42 20.1046 42.8954 21 44 21Z" fill="currentColor"/><path d="M22 10C23.1046 10 24 9.10457 24 8C24 6.89543 23.1046 6 22 6C20.8954 6 20 6.89543 20 8C20 9.10457 20.8954 10 22 10Z" fill="currentColor"/><path d="M9.45455 39.9942C6.14242 37.461 4 33.4278 4 28.8851C4 21.2166 10.1052 15 17.6364 15C23.9334 15 29.2336 19.3462 30.8015 25.2533C32.0353 24.6159 33.431 24.2567 34.9091 24.2567C39.9299 24.2567 44 28.4011 44 33.5135C44 37.3094 41.7562 40.5716 38.5455 42"/><path d="M22.2426 24.7574C21.1569 23.6716 19.6569 23 18 23C14.6863 23 12 25.6863 12 29C12 30.6569 12.6716 32.1569 13.7574 33.2426"/>' },
+  'snowflake': { v: '0 0 48 48', d: '<path d="M24 4V44"/><path d="M6.72461 14L41.3656 34"/><path d="M6.71923 33.9773L41.2814 14.0228"/><path d="M12 10L15 19L6 21"/><path d="M6 27L15 29L12 38"/><path d="M36 10L33 19L42 21"/><path d="M42 27L33 29L36 38"/><path d="M18 7L24 13L30 7"/><path d="M18 41L24 35L30 41"/>' },
+  'earth': { v: '0 0 48 48', d: '<path fill-rule="evenodd" clip-rule="evenodd" d="M24 44C35.0457 44 44 35.0457 44 24C44 12.9543 35.0457 4 24 4C12.9543 4 4 12.9543 4 24C4 35.0457 12.9543 44 24 44Z"/><path d="M4 24H44"/><path fill-rule="evenodd" clip-rule="evenodd" d="M24 44C28.4183 44 32 35.0457 32 24C32 12.9543 28.4183 4 24 4C19.5817 4 16 12.9543 16 24C16 35.0457 19.5817 44 24 44Z"/><path d="M9.85791 10.1421C13.4772 13.7614 18.4772 16 24 16C29.5229 16 34.5229 13.7614 38.1422 10.1421"/><path d="M38.1422 37.8579C34.5229 34.2386 29.5229 32 24 32C18.4772 32 13.4772 34.2386 9.85791 37.8579"/>' },
+  'link': { v: '0 0 48 48', d: '<path d="M24.7073 9.56521L9.85801 24.4145C6.34329 27.9292 6.34329 33.6277 9.85801 37.1424V37.1424C13.3727 40.6571 19.0712 40.6571 22.5859 37.1424L40.2636 19.4647C42.6067 17.1216 42.6067 13.3226 40.2636 10.9794V10.9794C37.9205 8.63628 34.1215 8.63628 31.7783 10.9794L14.1007 28.6571C12.9291 29.8287 12.9291 31.7282 14.1007 32.8997V32.8997C15.2722 34.0713 17.1717 34.0713 18.3433 32.8997L33.1925 18.0505"/>' },
+  'computer': { v: '0 0 48 48', d: '<rect x="19" y="32" width="10" height="9"/><rect x="5" y="8" width="38" height="24" rx="2" fill="none"/><path d="M22 27H26"/><path d="M14 41L34 41"/>' }
+};
+function ipIcon(name){
+  const it = IP_ICONS[name];
+  if(!it) return "";
+  return '<svg class="ip" viewBox="'+it.v+'" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+it.d+'</svg>';
+}
+function renderIcons(root){
+  (root || document).querySelectorAll("[data-icon]").forEach(el=>{
+    el.innerHTML = ipIcon(el.getAttribute("data-icon"));
+    el.removeAttribute("data-icon");
+  });
+}
+function ipMaskUrl(name){
+  const it = IP_ICONS[name];
+  if(!it) return "none";
+  const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="'+it.v+'" fill="none" stroke="black" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">'+it.d+'</svg>';
+  return 'url("data:image/svg+xml,' + encodeURIComponent(svg) + '")';
+}
+try{
+  document.documentElement.style.setProperty("--ip-success", ipMaskUrl("success"));
+  document.documentElement.style.setProperty("--ip-error", ipMaskUrl("attention"));
+}catch(e){}
 const $ = id => document.getElementById(id);
+renderIcons();
 const PALETTE = [["#00A6F2","#E5F4FF"],["#FC6B50","#FDEBDE"],["#3CB3C8","#DEFBF8"],
 ["#7D7AEA","#EDEDFF"],["#FF9900","#FCEBCD"],["#EF5B75","#FFEFF0"],["#5B8EFF","#EAF1FF"],
 ["#F067BB","#FFEDF8"],["#29BBAA","#E2F8F3"],["#CBA713","#FFF8C8"],["#B967E3","#F9EDFF"],
@@ -448,7 +460,7 @@ function apiUrl(p){ return API_BASE + p; }
       var d = document.getElementById("jsErrBar");
       if(!d){ d = document.createElement("div"); d.id="jsErrBar";
         d.style.cssText="position:fixed;left:0;right:0;bottom:0;background:#7a1f1f;color:#fff;font:12px/1.5 monospace;padding:6px 10px;z-index:2147483647;white-space:pre-wrap;max-height:38%;overflow:auto";
-        var x=document.createElement("span"); x.textContent="✕ 关闭 "; x.style.cssText="cursor:pointer;color:#fff;font-weight:bold;margin-right:8px"; x.onclick=function(){d.remove();};
+        var x=document.createElement("span"); x.innerHTML=ipIcon("close")+"关闭"; x.style.cssText="cursor:pointer;color:#fff;font-weight:bold;margin-right:8px"; x.onclick=function(){d.remove();};
         d.appendChild(x); d.appendChild(document.createTextNode(t)); document.body.appendChild(d);
       } else { d.appendChild(document.createTextNode("\n"+t)); }
     }catch(e){}
@@ -467,7 +479,7 @@ function updateNet(ok){
     el.id = "netBanner";
     el.style.cssText = "background:#fff3f0;color:#d93026;padding:10px 14px;margin:0 0 12px;" +
       "border:1px solid #f5c6c0;border-radius:8px;font-size:14px;line-height:1.6";
-    el.textContent = "⚠ 无法连接到导入器服务。可能原因：网络波动、后端部署未就绪、或信号差。";
+    el.textContent = "无法连接到导入器服务。可能原因：网络波动、后端部署未就绪、或信号差。";
     const first = document.body.firstChild;
     document.body.insertBefore(el, first);
   }else if(ok && el){
@@ -566,11 +578,12 @@ async function newTable(){
 async function doParse(){
   const m = $("importMsg"); m.className = "msg";
   $("errlist").textContent = ""; $("grid").innerHTML = ""; $("stats").textContent = "";
+  $("btnExportXls").disabled = true;
   try{
     const d = await api("/api/parse", {text: $("jsonInput").value});
     state.courses = d.courses;
     state.schedule = d.schedule;
-    let html = "已解析 <b>" + d.count + "</b> 门课程（点课程卡片可编辑/删除）";
+    let html = "已解析 <b>" + d.count + "</b> 门课程";
     if(d.errors.length) html += "，<span style='color:var(--err)'>" + d.errors.length + " 条被跳过</span>";
     $("stats").innerHTML = html;
     if(d.errors.length) $("errlist").textContent = "跳过详情：\n" + d.errors.join("\n");
@@ -581,6 +594,9 @@ async function doParse(){
       $("stats").innerHTML += conflictAlertHtml(cf);
     }
     $("btnImport").disabled = false;
+    $("btnExportXls").disabled = false;
+    // 解析与预览是纯本地逻辑，不依赖小爱连接；连接小爱只用于最后的导入
+    $("cardImport").classList.remove("hidden");
   }catch(e){ msg(m, e.message, false); $("btnImport").disabled = true; }
 }
 
@@ -652,7 +668,7 @@ function courseCellInner(c){
   const p = PALETTE[c.styleIdx % 12];
   const meta = [c.teacher, c.position].filter(x=>x).join(" · ");
   return '<div class="cc" data-idx="'+(c._idx!=null?c._idx:"")+'" style="background:'+p[1]+';color:'+p[0]+'">'+
-    '<span class="edit-hint">✎</span>'+
+    '<span class="edit-hint">'+ipIcon("edit")+'</span>'+
     '<div class="n">'+esc(c.name)+'</div>'+
     (meta?'<div class="m">'+esc(meta)+'</div>':'')+
     '<div class="m">'+esc(c.weeksText)+'</div></div>';
@@ -672,8 +688,8 @@ function ensureEditor(){
     + '<div style="display:flex;gap:8px"><label style="flex:1;font-size:13px;margin:6px 0">教师<input id="edTeacher" style="width:100%;padding:6px 8px;box-sizing:border-box"></label>'
     + '<label style="flex:1;font-size:13px;margin:6px 0">教室<input id="edPos" style="width:100%;padding:6px 8px;box-sizing:border-box"></label></div>'
     + '<div style="display:flex;gap:8px"><label style="flex:1;font-size:13px;margin:6px 0">星期<select id="edDay" style="width:100%;padding:6px 8px;box-sizing:border-box"></select></label>'
-    + '<label style="flex:1;font-size:13px;margin:6px 0">节次<input id="edSec" placeholder="如 1,2 或 3-4" style="width:100%;padding:6px 8px;box-sizing:border-box"></label></div>'
-    + '<label style="display:block;font-size:13px;margin:6px 0">周次<input id="edWeeks" placeholder="如 1-16周 / 1-15周(单)" style="width:100%;padding:6px 8px;box-sizing:border-box"></label>'
+    + '<label style="flex:1;font-size:13px;margin:6px 0">节次<input id="edSec" style="width:100%;padding:6px 8px;box-sizing:border-box"></label></div>'
+    + '<label style="display:block;font-size:13px;margin:6px 0">周次<input id="edWeeks" style="width:100%;padding:6px 8px;box-sizing:border-box"></label>'
     + '<div style="display:flex;gap:8px;margin-top:14px"><button id="edSave" class="primary" style="flex:1">保存</button>'
     + '<button id="edDel" class="danger" style="flex:1">删除该课</button>'
     + '<button id="edCancel" style="flex:1">取消</button></div>'
@@ -716,11 +732,12 @@ function expandWeekInput(s){
 function closeEditor(){ const m=document.getElementById("editModal"); if(m) m.style.display="none"; editingIdx=null; }
 function refreshPreview(){
   renderGrid(state.courses);
-  let html = "已解析 <b>" + state.courses.length + "</b> 门课程（点卡片可编辑/删除）";
+  let html = "已解析 <b>" + state.courses.length + "</b> 门课程";
   const cf = highlightConflicts(false);
   if(cf.bad.size) html += conflictAlertHtml(cf);
   $("stats").innerHTML = html;
   $("btnImport").disabled = state.courses.length === 0;
+  $("btnExportXls").disabled = state.courses.length === 0;
 }
 function saveEditor(){
   if(editingIdx==null) return;
@@ -745,6 +762,80 @@ function deleteEditor(){
   if(!confirm("删除这门课？（仅从预览中移除，不影响小爱已有课程）")) return;
   state.courses.splice(editingIdx,1);
   closeEditor(); refreshPreview();
+}
+
+// ---- 导出预览（含手动编辑/删除）为 .xls：纯前端生成，不经过小爱服务器 ----
+function courseCellText(c){
+  return [c.name, [c.teacher, c.position].filter(x=>x).join(" · "), c.weeksText || c.weeks || ""]
+    .filter(x=>x).join("\n");
+}
+function exportPreviewXls(){
+  const courses = state.courses || [];
+  if(!courses.length){ alert("还没有解析出课程，请先「解析预览」。"); return; }
+  if(typeof XLSX === "undefined"){ alert("导出库未加载（vendor/xlsx.full.min.js），请刷新页面后重试。"); return; }
+
+  const cells = {};
+  let maxSec = 0;
+  courses.forEach(c=>{
+    const secs = [...new Set(parseJcdm(c.sections))].sort((a,b)=>a-b);
+    secs.forEach(s=>{
+      maxSec = Math.max(maxSec, s);
+      (cells[c.day+"_"+s] = cells[c.day+"_"+s] || []).push(c);
+    });
+  });
+  if(!maxSec){ alert("这些课程没有有效节次，无法导出课表。"); return; }
+
+  const keyOf = arr => arr.map(c=>[c.name,c.teacher,c.position,c.weeksText||c.weeks||""].join("~")).sort().join("|");
+  const rows = [["节次"].concat(DAY_NAMES.slice(1))];
+  for(let s=1; s<=maxSec; s++) rows.push([String(s), "", "", "", "", "", "", ""]);
+  const merges = [], occupied = new Set();
+  for(let d=1; d<=7; d++){
+    let s = 1;
+    while(s <= maxSec){
+      if(occupied.has(d+"_"+s)){ s++; continue; }
+      const list = cells[d+"_"+s];
+      if(!list || !list.length){ s++; continue; }
+      const k = keyOf(list);
+      let span = 1;
+      while(s+span <= maxSec && !occupied.has(d+"_"+(s+span)) &&
+            cells[d+"_"+(s+span)] && keyOf(cells[d+"_"+(s+span)]) === k) span++;
+      rows[s][d] = list.map(courseCellText).join("\n\n");
+      if(span > 1){
+        for(let i=1; i<span; i++) occupied.add(d+"_"+(s+i));
+        merges.push({s:{r:s, c:d}, e:{r:s+span-1, c:d}});
+      }
+      s += span;
+    }
+  }
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  ws["!merges"] = merges;
+  ws["!cols"] = [{wch:6}].concat(Array.from({length:7}, ()=>({wch:20})));
+  ws["!rows"] = rows.map((_, i)=>({hpt: i===0 ? 22 : 58}));
+
+  const list = [["课程名称","教师","教室","星期","节次","周次"]];
+  courses.forEach(c=>{
+    list.push([c.name || "", c.teacher || "", c.position || "",
+      DAY_NAMES[c.day] || "", c.sections || "", c.weeksText || c.weeks || ""]);
+  });
+  const ws2 = XLSX.utils.aoa_to_sheet(list);
+  ws2["!cols"] = [{wch:22},{wch:10},{wch:16},{wch:8},{wch:12},{wch:18}];
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "课程表");
+  XLSX.utils.book_append_sheet(wb, ws2, "课程清单");
+  let out;
+  try{ out = XLSX.write(wb, {bookType:"xls", type:"array"}); }
+  catch(e){ alert("生成 Excel 失败：" + ((e && e.message) || e)); return; }
+
+  const blob = new Blob([out], {type:"application/vnd.ms-excel"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  const d = new Date();
+  a.download = "课程表_" + d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0") + ".xls";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
 }
 
 // ---- 导入前冲突校验：同 星期 + 节次有交集 + 周次有交集 → 小爱会判 601，先在预览里高亮闪烁 ----
@@ -784,7 +875,7 @@ function highlightConflicts(scroll){
   return cf;
 }
 function conflictAlertHtml(cf){
-  return '<div class="conflict-alert">⚠ ' + cf.bad.size + ' 门课时间重叠（已红框闪烁）'
+  return '<div class="conflict-alert">' + ipIcon("error") + cf.bad.size + ' 门课时间重叠，点卡片调整'
     + (cf.pairs.length ? '：' + cf.pairs.join('；') : '') + '，导入前请点开调整</div>';
 }
 
@@ -857,8 +948,8 @@ function setupSectionCollapse(){
   if(rows.length<=5){ btn.style.display="none"; table.classList.remove("show-extra"); return; }
   btn.style.display="";
   const expanded = table.classList.contains("show-extra");
-  btn.textContent = expanded ? ("▴ 收起（共 " + rows.length + " 节）")
-                              : ("▾ 展开其余 " + (rows.length-5) + " 节（共 " + rows.length + " 节）");
+  btn.innerHTML = expanded ? (ipIcon("arrow-up") + "收起")
+                           : (ipIcon("arrow-down") + "展开其余 " + (rows.length-5) + " 节");
 }
 
 function renderSchedule(sched){
@@ -874,7 +965,7 @@ function renderSchedule(sched){
   const secs = s.sections || [];
   secs.forEach((c,i) => { html += secRowHtml(c.i != null ? c.i : (i+1), c.s || "", c.e || ""); });
   html += '</tbody></table>';
-  html += '<div class="btns" style="margin-top:6px"><button id="btnToggleSec" style="display:none">▾ 展开其余节</button></div>';
+  html += '<div class="btns" style="margin-top:6px"><button id="btnToggleSec" style="display:none">'+ipIcon("arrow-down")+'展开其余节</button></div>';
   // 学校作息预设：默认「自动（按教务数据）」；检测到河南师大自动选中，也可手动切换（旧脚本无 host 时兜底）
   html += '<div class="btns" style="margin-top:8px;align-items:center;gap:8px">'
     + '<label style="font-size:13px;color:var(--sub)" for="schoolPreset">学校作息：</label>'
@@ -884,11 +975,11 @@ function renderSchedule(sched){
     + '</select></div>';
   html += '<div class="btns" id="htuBtns" style="margin-top:8px;align-items:center;gap:8px;display:none">'
     + '<span id="htuBtnsHint" style="font-size:13px;color:var(--sub)">官方作息：</span>'
-    + '<button id="btnHtuSummer">☀ 夏令时</button>'
-    + '<button id="btnHtuWinter">❄ 冬令时</button></div>';
+    + '<button id="btnHtuSummer">'+ipIcon("sunny")+'夏令时</button>'
+    + '<button id="btnHtuWinter">'+ipIcon("snowflake")+'冬令时</button></div>';
   html += '<div class="btns" style="margin-top:8px"><button id="btnAddSec">＋ 添加节次</button><button id="btnDefTimes">填入常见12节时间表</button></div>';
   if(!secs.length){
-    html += '<p class="hint" style="margin-top:6px">教务系统未提供节次时间表，可手动添加或点上方按钮填入常见时间表。</p>';
+    html += '<p class="hint" style="margin-top:6px">未提供时间表，可手动添加。</p>';
   }
   wrap.innerHTML = html;
   $("btnAddSec").onclick = addSecRow;
@@ -963,11 +1054,11 @@ async function doImport(){
   console.log("[导入] 点击。state.ctId=", state.ctId, " 课程数=", (state.courses||[]).length, " btn=", !!btn, " btnDisabled=", btn && btn.disabled);
   try{
     if(!m){ alert("页面异常：找不到导入提示元素，请 Ctrl+F5 刷新"); return; }
-    if(!state.ctId){ msg(m,"请先选择目标课表",false); return; }
+    if(!state.ctId){ msg(m,"请先连接小爱并选择目标课表。",false); return; }
     if(!state.courses || !state.courses.length){ msg(m,"还没有解析出课程，请先「解析预览」",false); return; }
     const cf = highlightConflicts(true);
     if(cf.bad.size){
-      $("stats").innerHTML = "已解析 <b>" + state.courses.length + "</b> 门课程（点课程卡片可编辑/删除）" + conflictAlertHtml(cf);
+      $("stats").innerHTML = "已解析 <b>" + state.courses.length + "</b> 门课程" + conflictAlertHtml(cf);
       return;
     }
     const syncEl = $("syncSettings"), clearEl = $("clearFirst");
@@ -980,7 +1071,7 @@ async function doImport(){
         (clearEl && clearEl.checked ? "，并先清空该课表现有课程（不可恢复）" : "") +
         (sync && hasSched ? "，并同步课表设置（节数/时间表）" : "") + "，确定？")) return;
     btn.disabled = true; btn.textContent = "导入中…";
-    msg(m, "⏳ 正在导入 " + state.courses.length + " 门课程到「" + tableName + "」…", true);
+    msg(m, "正在导入 " + state.courses.length + " 门课程到「" + tableName + "」…", true);
     const d = await api("/api/import", {
       ctId: state.ctId, courses: state.courses, clearFirst: !!(clearEl && clearEl.checked),
       schedule: schedule, syncSettings: sync
@@ -996,14 +1087,14 @@ async function doImport(){
     let txt, okFlag;
     if (imported === 0) {
       okFlag = false;
-      txt = "❌ 没有写入任何课程（小爱返回 imported=0）。请确认凭据是【手机小爱 App 同一账号】那台设备取的。";
+      txt = "没有写入任何课程（小爱返回 imported=0）。请确认凭据是【手机小爱 App 同一账号】那台设备取的。";
     } else if (n === 0) {
       okFlag = true;
-      txt = "✅ 已写入 " + imported + " 门课程（小爱返回成功）" + swNote +
+      txt = "已写入 " + imported + " 门课程（小爱返回成功）" + swNote +
             "。回读到 0 门多为刚切换的延迟——请到【小爱 App → 课程表】确认已切到「" + tableName + "」再看。";
     } else {
       okFlag = true;
-      txt = "✅ 导入成功：新增 " + imported + " 门课程" +
+      txt = "导入成功：新增 " + imported + " 门课程" +
             (d.deleted ? "（已先清空原有 " + d.deleted + " 门）" : "") +
             (n != null ? "，该课表现有 " + n + " 门课程" : "") + swNote +
             (d.synced ? "，节数/时间表已同步" : (d.syncError ? "（设置同步失败：" + d.syncError + "）" : "")) +
@@ -1014,7 +1105,7 @@ async function doImport(){
     console.error("[导入] 异常：", e);
     msg(m, "导入失败：" + ((e && e.message) || e || "未知错误"), false);
   }
-  btn.disabled = false; btn.textContent = "🚀 导入到小爱 →";
+  btn.disabled = false; btn.innerHTML = ipIcon("upload-one") + "导入到小爱";
 }
 
 async function loadCourses(){
@@ -1097,6 +1188,7 @@ $("btnSample").onclick = ()=>{ $("jsonInput").value = JSON.stringify(SAMPLE,null
 $("btnLoadCourses").onclick = loadCourses;
 $("btnClear").onclick = clearTable;
 $("btnExport").onclick = exportJson;
+$("btnExportXls").onclick = exportPreviewXls;
 $("tableSel").onchange = e=>{ state.ctId = e.target.value; };
 
 // ----- 乘方教务书签 / 脚本分发（通用版：用户自行填写教务系统地址）-----
@@ -1169,13 +1261,13 @@ function jiaowuFallbackCopy(text, msg){
 }
 
 $("btnCopyBookmarklet").onclick = ()=>{
-  jiaowuCopy(makeBookmarklet(), "✅ 提取书签已复制：在书签栏空白处右键 →「添加网页」→ 网址框里 Ctrl+V 粘贴 → 保存");
+  jiaowuCopy(makeBookmarklet(), "书签已复制。请粘贴到书签栏「添加网页」的地址框。");
 };
 $("btnCopyUserscript").onclick = ()=>{
   fetch(apiUrl("/api/jiaowu_userscript.js")).then(r=>r.text()).then(function(t){
-    jiaowuCopy(t, "✅ 油猴脚本已复制，去 Tampermonkey 管理面板新建脚本粘贴即可");
+    jiaowuCopy(t, "脚本已复制，去 Tampermonkey 新建脚本粘贴。");
   }).catch(function(e){
-    $("jiaowuMsg").className = "msg err"; $("jiaowuMsg").textContent = "❌ 获取脚本失败：" + e;
+    $("jiaowuMsg").className = "msg err"; $("jiaowuMsg").textContent = "获取脚本失败：" + e;
   });
 };
 
@@ -1495,7 +1587,7 @@ $("btnAiParse").onclick = async function(){
       var std = Array.isArray(obj) ? obj : (obj && (obj.courses || (obj.data && Array.isArray(obj.data) && obj.data[0] && obj.data[0].name)));
       if(std && std.length && std[0].name && (std[0].day || std[0].weekday)){
         $("jsonInput").value = JSON.stringify(obj, null, 2);
-        setAiMsg("✅ 识别到标准课表 JSON（" + std.length + " 条），已填入下方 JSON 框", "ok");
+        setAiMsg("已识别 " + std.length + " 条课程并填入", "ok");
         $("btnParse").click();
         return;
       }
@@ -1507,8 +1599,8 @@ $("btnAiParse").onclick = async function(){
           var merged = mergeWeekCourses(res.courses);
           var schedule = buildSchedule(merged, res.maxSec, { s: res.timeStart, e: res.timeEnd });
           $("jsonInput").value = JSON.stringify({ courses: merged, schedule: schedule }, null, 2);
-          var warn = res.hasWeekInfo ? "" : "（数据不含周次字段，已按 1-16 周处理，请核对；完整学期请用教务页书签提取）";
-          setAiMsg("✅ 从乘方教务接口数据解析到 " + merged.length + " 条课程，已填入 JSON 框" + warn, res.hasWeekInfo ? "ok" : "");
+          var warn = res.hasWeekInfo ? "" : "（数据不含周次，已按 1-16 周处理，请核对）";
+          setAiMsg("已解析 " + merged.length + " 条课程并填入" + warn, res.hasWeekInfo ? "ok" : "");
           $("btnParse").click();
           return;
         }
@@ -1522,7 +1614,7 @@ $("btnAiParse").onclick = async function(){
     if(courses.length >= 1){
       var schedule2 = buildSchedule(courses, Math.max.apply(null, courses.flatMap(function(c){return c.sections.split(",").map(Number);})));
       $("jsonInput").value = JSON.stringify({ courses: courses, schedule: schedule2 }, null, 2);
-      setAiMsg("✅ 本地解析到 " + courses.length + " 条课程，已填入 JSON 框", "ok");
+      setAiMsg("已解析 " + courses.length + " 条课程并填入", "ok");
       $("btnParse").click();
       return;
     }
@@ -1541,10 +1633,10 @@ $("btnAiParse").onclick = async function(){
     var data = await resp.json();
     if(data.ok && data.data && data.data.courses && data.data.courses.length > 0){
       $("jsonInput").value = JSON.stringify(data.data, null, 2);
-      setAiMsg("✅ AI 解析到 " + data.data.courses.length + " 条课程，已填入 JSON 框", "ok");
+      setAiMsg("AI 解析到 " + data.data.courses.length + " 条课程并填入", "ok");
       $("btnParse").click();
     } else {
-      setAiMsg("⚠️ 未能解析出课程：请粘贴课表接口 JSON 或「星期+节次+课名」文字行，也可用教务页书签一键提取。", "err");
+      setAiMsg("未能解析出课程。请粘贴课表 JSON 或「星期+节次+课名」文字行。", "err");
     }
   }catch(e3){
     setAiMsg("AI 解析请求失败：" + e3 + "，请改用书签提取或手动填写 JSON。", "err");
@@ -1617,7 +1709,7 @@ async function clipboardFill(){
     if(!arr.length){ m.className = "msg err"; m.textContent = "剪贴板 JSON 里没有 courses 数组。"; return; }
     $("jsonInput").value = JSON.stringify(parsed, null, 2);
     m.className = "msg ok";
-    m.textContent = "✅ 剪贴板识别到 " + arr.length + " 条课表，已填入 JSON 框并解析";
+    m.textContent = "已识别 " + arr.length + " 条课表并解析";
     $("jsonInput").scrollIntoView({behavior: "smooth", block: "center"});
     doParse();   // 自动解析预览
   }catch(e){
@@ -1747,8 +1839,7 @@ function xlsHandleFile(file){
       }
       var schedule = buildSchedule(best.courses, best.maxSection, null);
       $("jsonInput").value = JSON.stringify({ courses: best.courses, schedule: schedule, source: "xls:" + bestName }, null, 2);
-      var tail = best.skipped.length ? "；已跳过 " + best.skipped.length + " 条无法定位的格子" : "";
-      say("✅ 解析出 " + best.courses.length + " 门课（" + best.entries + " 条单元格记录，学期 " + (best.semester || "未知") + "，最多到第 " + best.maxSection + " 节" + tail + "）。正在生成预览——请务必核对星期/节次/周次，并在课表设置里套用学校作息（表格不含上下课时刻）。", true);
+      say("解析出 " + best.courses.length + " 门课，正在生成预览。请核对星期/节次/周次，并在课表设置里补上作息。", true);
       $("btnParse").click();
     }catch(e){
       say("解析失败：" + (e && e.message || e), false);
@@ -1832,19 +1923,10 @@ function applyMobileLayout(force){
       box=document.createElement("details");
       box.id="pcWays";
       box.style.cssText="margin-top:14px;border:1px solid var(--line);border-radius:10px;padding:12px 16px";
-      box.innerHTML='<summary style="font-size:13px;font-weight:600;color:var(--sub);cursor:pointer">💻 其他提取方式（书签 / 油猴脚本 · 手机上装不了，需在电脑上操作）</summary>'
-        + '<p class="hint" style="margin:10px 0 0">下面两种方式都需要电脑：书签要用书签栏、油猴脚本要装 Tampermonkey 扩展，移动浏览器都不支持。</p>';
+      box.innerHTML='<summary style="font-size:13px;font-weight:600;color:var(--sub);cursor:pointer">'+ipIcon("computer")+'其他提取方式</summary>';
       if(xls.parentNode===card) card.insertBefore(box, xls.nextSibling); else card.appendChild(box);
     }
     box.appendChild(bm); box.appendChild(us);
-
-    // 3) 操作说明切成手机版
-    var mo=document.getElementById("flowMobile"), de=document.getElementById("flowDesktop");
-    if(mo&&de){ de.hidden=true; mo.hidden=false; }
-    var h=document.getElementById("cardJiaowuHint");
-    if(h) h.innerHTML='登录你学校的乘方教务系统后，用下面的 <strong> 上传教务导出的表格</strong> 一步拿到整学期课表 —— 手机上不需要装扩展、也不需要点书签。';
-    var lead=document.getElementById("headerTagLead");
-    if(lead) lead.textContent="导出教务表格 → 上传 → 导入小爱";
   }catch(e){}
 }
 applyMobileLayout();
@@ -1864,7 +1946,7 @@ $("xlsFile").onchange = function(){
   if(API_BASE){
     const bar = document.createElement("div");
     bar.style.cssText = "background:#0b3d61;color:#cfe8ff;padding:8px 14px;border-radius:8px;margin-bottom:14px;font-size:13px;display:flex;align-items:center;gap:10px;flex-wrap:wrap";
-    bar.innerHTML = '<span>🔗 后端 API：<code style="font-family:monospace">' + esc(API_BASE) + '</code></span>'
+    bar.innerHTML = '<span>'+ipIcon("link")+'后端 API：<code style="font-family:monospace">' + esc(API_BASE) + '</code></span>'
       + '<button id="__clrApi" style="padding:3px 10px;background:transparent;color:#cfe8ff;border:1px solid #4d7ea8;border-radius:5px;cursor:pointer">改用同源</button>';
     document.body.insertBefore(bar, document.body.firstChild);
     bar.querySelector("#__clrApi").onclick = function(){
@@ -1872,16 +1954,6 @@ $("xlsFile").onchange = function(){
       location.href = location.pathname;
     };
   }
-  // 访问计数
-  try{
-    const r = await fetch(apiUrl("/api/visit"));
-    const d = await r.json();
-    if(d.ok && d.data){
-      const n = d.data.visits || 0;
-      if(n) $("visitCounter").textContent = "第 " + n + " 位访客";
-    }
-  }catch(e){}
-
   try{
     const s = await api("/api/state");
     if(s.creds && s.creds.serviceToken){
@@ -1892,7 +1964,7 @@ $("xlsFile").onchange = function(){
     if(s.publicUrl){
       const banner = document.createElement("div");
       banner.style.cssText = "background:#1677ff;color:#fff;padding:10px 16px;border-radius:8px;margin-bottom:14px;display:flex;align-items:center;gap:10px;font-size:14px";
-      banner.innerHTML = '<strong>🌐 公网地址</strong><input id="__pub" style="flex:1;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.4);color:#fff;padding:5px 8px;border-radius:4px;font:13px monospace" value="'+s.publicUrl+'"><button id="__pubCp" style="padding:5px 10px;background:#fff;color:#1677ff;border:none;border-radius:4px;cursor:pointer;font-weight:600">复制链接</button><span style="opacity:.85;font-size:12px">关电脑即失效</span>';
+      banner.innerHTML = '<strong>'+ipIcon("earth")+'公网地址</strong><input id="__pub" style="flex:1;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.4);color:#fff;padding:5px 8px;border-radius:4px;font:13px monospace" value="'+s.publicUrl+'"><button id="__pubCp" style="padding:5px 10px;background:#fff;color:#1677ff;border:none;border-radius:4px;cursor:pointer;font-weight:600">复制链接</button><span style="opacity:.85;font-size:12px">关电脑即失效</span>';
       const root = document.body.firstChild; document.body.insertBefore(banner, root);
       $("__pubCp").onclick = ()=>{ $("__pub").select(); document.execCommand("copy"); $("__pubCp").textContent="已复制"; setTimeout(()=>$("__pubCp").textContent="复制链接", 1500); };
     }

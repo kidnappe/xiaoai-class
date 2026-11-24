@@ -277,16 +277,12 @@ check('jiaowuUrl 登录页', api.jiaowuUrl('login') === 'https://jxgl.myschool.e
   check('网格 多课格与单课格都纵向合并', rs === 2, 'rowspan="2" 出现 ' + rs + ' 次（期望 2）');
 }
 
-// 15. 移动端重排：桌面完全不触发；强制时切换成表格版说明
+// 15. 移动端重排：桌面完全不触发；手机上优先展示表格上传
 {
-  const D = global.document;
-  const fd = D.getElementById('flowDesktop'), fm = D.getElementById('flowMobile');
-  const lead = D.getElementById('headerTagLead'), hint = D.getElementById('cardJiaowuHint');
   api.applyMobileLayout();
-  check('移动端重排 桌面不触发', fd.hidden !== true && fm.hidden !== false && !/上传教务导出的表格/.test(hint.innerHTML));
   api.applyMobileLayout(true);
-  check('移动端重排 强制时切换说明版本', fd.hidden === true && fm.hidden === false, 'fd=' + fd.hidden + ' fm=' + fm.hidden);
-  check('移动端重排 顶部与卡片文案同步变化', /导出教务表格/.test(lead.textContent) && /上传教务导出的表格/.test(hint.innerHTML));
+  check('移动端重排 手机把表格上传提到前面', /insertBefore\(xls, bm\)/.test(inline) && /其他提取方式/.test(inline));
+  check('移动端重排 不再有重复流程说明', !/flowDesktop|flowMobile|cardJiaowuHint/.test(html));
 }
 
 // 16. 窄屏安全守卫：只在实测到真实横向溢出时才启用，并且能自行撤销
